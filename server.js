@@ -8,14 +8,24 @@ const app = express();
 const server = http.Server(app);
 const io = socketIO(server);
 
+const bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({
+  limit: '50mb'
+}));
+
 app.set('port', 5000);
 app.use('/static', express.static(__dirname + '/static'));
+app.use(express.static(__dirname + '/client/build'));
 
 
 // Routing
-app.get('/', function (request, response) {
-  response.sendFile(path.join(__dirname, 'index.html'));
+app.get("*", function (request, response) {
+  // response.sendFile(path.join(__dirname, 'index.html'));
+  response.sendFile(path.join(__dirname, '/client/build/index.html'));
 });
+
+
 
 
 // Starts the server.
@@ -26,51 +36,42 @@ server.listen(port, function () {
 
 
 // Add the WebSocket handlers
-let players = {};
-let colours = ["red", "orange", "yellow", "green", "blue", "purple", "grey", "black", "pink", "lightblue"]
 io.on('connection', function (socket) {
+  console.log("new connection!")
+  // socket.join("AAAA")
+  // console.log("Rooms: ", socket.rooms)
 
-  // handle players
-  const colourId = Object.keys(players).length % 10
+  // io.to(socket.id).emit("message", "only you see this " + socket.id)
+  // io.to("AAAA").emit("message", "you all see this")
 
-  socket.on('new player', function () { // if server receives a new player message from client
-    players[socket.id] = {
-      x: 300,
-      y: 300,
-      colour: colours[colourId]
-    };
+  // socket.emit("message", "hi")
 
-  });
 
-  socket.on('movement', function (data) { // if server receives a movement message from client
-    var player = players[socket.id] || {};
-    if (data.left) {
-      player.x -= 5;
-    }
-    if (data.up) {
-      player.y -= 5;
-    }
-    if (data.right) {
-      player.x += 5;
-    }
-    if (data.down) {
-      player.y += 5;
-    }
-  });
+  socket.on('disconnect', function () {
+    console.log(socket.id + " disconnected")
+  })
 
-  socket.on('disconnect', function() {
-    delete players[socket.id]
+  socket.on("createRoom", function (state) {
+    // console.log("from server: " + playerName)
+    // io.sockets.emit("playerName", playerName + " has joined!")
+    playerName = state.playerName;
+    roomCode = state.roomCode;
+
+    socket.join(roomCode)
+
+    console.log(playerName + " has joined room " + roomCode)
   })
 
 });
 
 
-setInterval(function () {
-  io.sockets.emit('message', 'hi!');
-}, 1000);
+// setInterval(function () {
+//   io.sockets.emit('message', 'wassup!');
+// }, 1000);
 
 
 
-setInterval(function () {
-  io.sockets.emit('state', players); // send state message to all clients 60 times a second
-}, 1000 / 60);
+// setInterval(function () {
+//   io.sockets.emit('state', players); // send state message to all clients 60 times a second
+// }, 1000 / 60);
+
