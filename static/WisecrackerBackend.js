@@ -145,11 +145,6 @@ function apiCreateRoom(playerCreating) {
     return roomCode
 }
 
-let tRoomCode = apiCreateRoom("ahmad")
-console.log(tRoomCode)
-console.log(roomData[tRoomCode])
-console.log(apiJoinRoom("dog", tRoomCode))
-
 ////////////////////////////////////////
 function promptListMaker() {
     //TODO RELOCATE TEXT FILE OF PROMPTS
