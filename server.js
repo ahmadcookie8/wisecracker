@@ -62,6 +62,16 @@ io.on('connection', function (socket) {
     console.log(playerName + " has joined room " + roomCode)
   })
 
+  socket.on("joinRoom", function (state) {
+    playerName = state.playerName
+    roomCode = state.roomCode;
+    players = state.players
+
+    socket.join(roomCode)
+
+    console.log(playerName + " has joined room " + roomCode + " with players: ", players)
+  })
+
 });
 
 

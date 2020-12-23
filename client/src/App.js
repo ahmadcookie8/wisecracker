@@ -8,7 +8,8 @@ import './App.css';
 
 
 const { testCall } = require("./test")
-const { apiCreateRoom } = require("./test") //TODO replace with WisecrackBackend
+const { apiCreateRoom } = require("./WisecrackerBackend")
+const { apiJoinRoom } = require("./WisecrackerBackend")
 
 const ENDPOINT = "http://localhost:5000";
 
@@ -40,7 +41,7 @@ const ENDPOINT = "http://localhost:5000";
 
 function App() {
   const [response, setResponse] = useState("");
-  const [state, setState] = useState({ playerName: "", roomCode: "" })
+  const [state, setState] = useState({ playerName: "", roomCode: "", players: [] })
 
   useEffect(() => {
     const socket = socketIOClient(ENDPOINT);
@@ -84,13 +85,28 @@ function App() {
     //call WisecrackerBackend.js#createRoom(state.playerName) and expect roomCode back 
     let roomCode = apiCreateRoom(state.playerName)
     state.roomCode = roomCode
-    
+
     const socket = socketIOClient(ENDPOINT);
     socket.emit("createRoom", state)
   }
 
   function joinRoom() {
     console.log("Joined Room " + state.roomCode + "!")
+
+    console.log("ZZZZ", state.playerName, state.roomCode)
+    let players = apiJoinRoom(state.playerName, state.roomCode)
+
+    if (typeof players === "string") {
+      const errorMessage = players
+      //display errorMessage on screen
+      console.log(errorMessage)
+    } else { //we're gucci
+
+      state.players = players
+
+      const socket = socketIOClient(ENDPOINT);
+      socket.emit("joinRoom", state)
+    }
   }
 
   return (
