@@ -12,7 +12,7 @@ import MainPage from "./react-components/MainPage"
 import LobbyPage from "./react-components/LobbyPage"
 
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = "https://thawing-ocean-59152.herokuapp.com/"//"http://localhost:5000";
 
 
 function App() {
