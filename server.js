@@ -14,6 +14,9 @@ app.use(bodyParser.json({
   limit: '50mb'
 }));
 
+//to bypass cors errors
+const cors = require("cors")
+
 app.set('port', 5000);
 app.use('/static', express.static(__dirname + '/static'));
 app.use(express.static(__dirname + '/client/build'));
