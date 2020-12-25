@@ -1,11 +1,12 @@
 const fs = require("fs")
 
+//TODO MAKE METHOD TO REINITIALIZE ALL GLOBAL VARIABLES AT THE START OF ROUND E.G. chooserIndex
 //Initialized Global Variables
 let underscore_count = 0
-let listOfPlayers = []
-let listOfTypers = []
-let chooser = ""
-let chooser_index = 0
+// let listOfPlayers = []
+//let listOfTypers = []
+//let chooser = ""
+let chooserIndex = 0
 //let playerData = {}
 let listOfPrompts = []
 let gamePrompt = ""
@@ -19,6 +20,7 @@ let maxScore = 0
 const ANSWER1 = 0
 const ANSWER2 = 1
 const SCORE = 2
+const ROLE = 3
 
 //----CALLS FOR THE SERVER TO MAKE----//
 // function apiGetChooser() {
@@ -48,12 +50,55 @@ const SCORE = 2
 // }
 
 // function apiGetPrompt() {
-//     let apiPrompt = listOfPrompts[Math.floor(Math.random() * listOfPrompts.length + 1)]
+const apiGetPrompt = () => {
+    let hasGeneratedPrompt = false
 
-//     gamePrompt = apiPrompt
+    if (!hasGeneratedPrompt) {
+        promptListMaker()
+        hasGeneratedPrompt = true
+    }
 
-//     return apiPrompt
-// }
+    console.log(listOfPrompts)
+    let apiPrompt = listOfPrompts[Math.floor(Math.random() * listOfPrompts.length + 1)]
+
+    gamePrompt = apiPrompt
+
+    return apiPrompt
+}
+
+const apiGetChooser = (roomCode) => {
+    listOfPlayers = Object.keys(roomData[roomCode])
+
+    for (let i = 0; i < listOfPlayers.length; i++) {
+        if (roomData[roomCode][listOfPlayers[i]][ROLE] === "chooser") {
+            return listOfPlayers[i]
+        }
+    }
+}
+
+const apiGetTypers = (roomCode) => {
+    listOfPlayers = Object.keys(roomData[roomCode])
+    currentylChosen = apiGetChooser(roomCode)
+    listOfTypers = []
+
+    for (let i = 0; i < listOfPlayers.length; i++) {
+        if (roomData[roomCode][listOfPlayers[i]][ROLE] !== "chooser") {
+            listOfTypers.push(listOfPlayers[i])
+        }
+
+    }
+    return listOfTypers
+}
+
+const apiGetPlayersAndRoles = (roomCode) => {
+    listOfPlayers = Object.keys(roomData[roomCode])
+    listOfPlayersAndRoles = {}
+
+    for (let i = 0; i < listOfPlayers.length; i++) {
+        listOfPlayersAndRoles[listOfPlayers[i]] = roomData[roomCode][listOfPlayers[i]][ROLE]
+    }
+    return listOfPlayersAndRoles
+}
 
 // function apiAssigningAnswersToPrompts(givenName, prompt, givenRoomCode) {
 //     fullAnswer = ""
@@ -102,102 +147,145 @@ const SCORE = 2
 //     return playerWithHighestScore
 // }
 
-const apiJoinRoom = (playerJoining, roomCode) => {//function apiJoinRoom(playerJoining, roomCode) {
-  roomCode = roomCode.toUpperCase()
-  playerJoining = playerJoining.toUpperCase()
+// function apiJoinRoom(playerJoining, roomCode) {
+const apiJoinRoom = (playerJoining, roomCode) => {
+    roomCode = roomCode.toUpperCase()
 
-  let listOfRoomCodes = Object.keys(roomData)
+    let listOfRoomCodes = Object.keys(roomData)
 
-  if (listOfRoomCodes.includes(roomCode)) {
-    let listOfPlayersInRoom = Object.keys(roomData[roomCode])
-    if (!listOfPlayersInRoom.includes(playerJoining)) {
-      roomData[roomCode][playerJoining] = ["", "", 0]
-      return Object.keys(roomData[roomCode])
+    if (listOfRoomCodes.includes(roomCode)) {
+        let listOfPlayersInRoom = Object.keys(roomData[roomCode])
+
+        listOfPlayersInRoom = listOfPlayersInRoom.map(element => {
+            return element.toUpperCase()
+        });
+
+        if (playerJoining !== "") {
+            if (!listOfPlayersInRoom.includes(playerJoining.toUpperCase)) {
+                roomData[roomCode][playerJoining] = ["", "", 0, ""]
+                return Object.keys(roomData[roomCode])
+            } else {
+                return "Name Taken"
+            }
+        } else {
+            return "Enter a Valid Name"
+        }
     } else {
-      return "Name Taken"
+        return "Room Code Doesn't Exist"
     }
-  } else {
-    return "Room Code Doesn't Exist"
-  }
 }
 
-const apiCreateRoom = (playerCreating) => {//function apiCreateRoom(playerCreating) {
-  let allCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-  let roomCode = ""
-  playerCreating = playerCreating.toUpperCase()
-
-  for (let i = 0; i < 4; i++) {
-    let digit = Math.floor(Math.random() * 36)
-    roomCode += allCharacters[digit]
-  }
-  roomCode = roomCode.toUpperCase()
-  let listOfRoomCodes = Object.keys(roomData)
-
-  while (listOfRoomCodes.includes(roomCode)) {
-    roomCode = ""
+//TODO MAKE THIS AGAIN BUT GIVEN ROOMCODE AS WELL AND I DONT HAVE TO GENERATE ONE
+//function apiCreateRoom(playerCreating) {
+const apiCreateRoom = (playerCreating) => {
+    let allCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    let roomCode = ""
 
     for (let i = 0; i < 4; i++) {
-      let digit = Math.floor(Math.random() * 36)
-      roomCode += allCharacters[digit]
+        let digit = Math.floor(Math.random() * 36)
+        roomCode += allCharacters[digit]
     }
-  }
-  roomCode = roomCode.toUpperCase()
+    roomCode = roomCode.toUpperCase()
+    let listOfRoomCodes = Object.keys(roomData)
 
-  roomData[roomCode] = {}
-  roomData[roomCode][playerCreating] = ["", "", 0]
+    while (listOfRoomCodes.includes(roomCode)) {
+        roomCode = ""
 
-  return roomCode
+        for (let i = 0; i < 4; i++) {
+            let digit = Math.floor(Math.random() * 36)
+            roomCode += allCharacters[digit]
+        }
+    }
+    roomCode = roomCode.toUpperCase()
+
+    roomData[roomCode] = {}
+    if (playerCreating !== "") {
+        roomData[roomCode][playerCreating] = ["", "", 0, ""]
+    } else {
+        return "Enter a Valid Name"
+    }
+
+    return roomCode
 }
 
-//TODO CHECK IF roomCode AND playerLeaving EXISTS BEFORE LEAVING
 const apiLeftRoom = (playerLeaving, roomCode) => {
-  delete roomData[roomCode][playerLeaving.toUpperCase()]
-  return Object.keys(roomData[roomCode])
+    let listOfRoomCodes = Object.keys(roomData)
+    let listOfPlayers = Object.keys(roomData[roomCode])
+
+    listOfPlayers = listOfPlayers.map(element => {
+        return element.toUpperCase()
+    });
+
+    if (listOfPlayers.includes(playerLeaving.toUpperCase()) && listOfRoomCodes.includes(roomCode)) {
+        delete roomData[roomCode][playerLeaving]
+        return Object.keys(roomData[roomCode])
+    }
 }
 
 const apiRemoveRoom = (roomCode) => {
-  let listOfRoomCodes = Object.keys(roomData)
+    let listOfRoomCodes = Object.keys(roomData)
 
-  roomCode = roomCode.toUpperCase()
+    roomCode = roomCode.toUpperCase()
 
-  if (listOfRoomCodes.includes(roomCode)) {
-    delete roomData[roomCode]
-  }
+    if (listOfRoomCodes.includes(roomCode)) {
+        delete roomData[roomCode]
+    }
 }
 
-module.exports = { apiJoinRoom, apiCreateRoom, apiLeftRoom, apiRemoveRoom }
+module.exports = { apiGetPrompt, apiJoinRoom, apiCreateRoom, apiGetChooser, apiGetTypers, apiGetPlayersAndRoles, apiLeftRoom, apiRemoveRoom }
 
-// export function apiCreateRoomWithRoomCode(playerCreating, givenRoomCode) {
-//   playerCreating = playerCreating.toUpperCase()
-//   let roomCode = givenRoomCode.toUpperCase()
+// TEST CODE TO CREATING AND JOINING A ROOM
+tRoomCode = apiCreateRoom("john")
+apiJoinRoom("milly", tRoomCode)
+apiJoinRoom("dog", tRoomCode)
+// console.log(roomData)
+console.log(roomData[tRoomCode])
+console.log(apiLeftRoom("milly", tRoomCode))
+console.log(roomData[tRoomCode])
+apiRemoveRoom(tRoomCode)
+console.log(roomData)
 
-//   roomData[roomCode] = {}
-//   roomData[roomCode][playerCreating] = ["", "", 0]
+// TESTING TO SEE IF BLANK NAMES ARE REJECTED
+// console.log(apiCreateRoom(""))
+// tRoomCode = apiCreateRoom("John")
+// console.log(apiJoinRoom("", tRoomCode))
+// console.log(apiJoinRoom("dog", tRoomCode))
 
-//   return roomCode
-// }
 
-////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function promptListMaker() {
 //     //TODO RELOCATE TEXT FILE OF PROMPTS
-//     fs.readFile('listOfPrompts.txt', 'utf-8', (err, data) => {
+//     let listOfPrompts = []
+//     listOfPrompts = fs.readFile('listOfPrompts.txt', 'utf-8', (err, data) => {
+
 //         if (err) throw err;
 
 //         // Converting Raw Buffer to text 
 //         // data using tostring function. 
 //         // console.log(data); 
 //         listOfPrompts = data.split("\n")
-//         console.log(listOfPrompts)
+//         return listOfPrompts
+//         // console.log(listOfPrompts)
 
 //     })
-
+//     console.log(listOfPrompts)
 //     return listOfPrompts
 // }
 
-// //method to give server list of people in a certain room.
-// function addPlayerToRoom(roomCode, personJoining) {
-//     return roomData[roomCode].push(personJoining)
-// }
+function promptListMaker() {
+    //TODO RELOCATE TEXT FILE OF PROMPTS
+    let _listOfPrompts = fs.readFileSync('listOfPrompts.txt', 'utf8')
+    listOfPrompts = _listOfPrompts.split("\n")
+    // console.log(listOfPrompts)
+}
+
+// // function getPrompt() {
+// //     apiPrompt = listOfPrompts[Math.floor(Math.random() * listOfPrompts.length)]
+
+// //     gamePromp = apiPrompt
+
+// //     return apiPrompt
+// // }
 
 // function addAnswerToPrompt(prompt, answer1, answer2) {
 //     fullAnswer = ""
@@ -247,12 +335,44 @@ module.exports = { apiJoinRoom, apiCreateRoom, apiLeftRoom, apiRemoveRoom }
 // }
 
 // function roleAssigner() {
-//     chooser = listOfPlayers[chooser_index]
-//     if (chooser_index < listOfPlayers.length - 1) {
-//         chooser_index++
+//     chooser = listOfPlayers[chooserIndex]
+//     if (chooserIndex < listOfPlayers.length - 1) {
+//         chooserIndex++
 //     } else {
-//         chooser_index = 0
+//         chooserIndex = 0
 //     }
+
+
+
+
+
+function roleAssigner(roomCode) {
+    listOfPlayers = Object.keys(roomData[roomCode])
+    let toBeChosen = ""
+    let thereIsAChooser = false
+
+    for (let i = 0; i < listOfPlayers.length; i++) {
+        roomData[roomCode][listOfPlayers[i]][ROLE] = "typer"
+    }
+
+    toBeChosen = listOfPlayers[chooserIndex]
+    roomData[roomCode][toBeChosen][ROLE] = "chooser"
+
+    for (let i = 0; i < listOfPlayers.length; i++) {
+        if (roomData[roomCode][listOfPlayers[i]][ROLE] !== "chooser") {
+            roomData[roomCode][listOfPlayers[i]][ROLE] = "typer"
+        }
+    }
+
+    if (chooserIndex < listOfPlayers.length - 1) {
+        chooserIndex++
+    } else {
+        chooserIndex = 0
+    }
+}
+
+
+
 
 //     for (let i = 0; i < listOfPlayers.length; i++) {
 //         if (listOfPlayers[i] !== chooser) {
@@ -272,13 +392,6 @@ module.exports = { apiJoinRoom, apiCreateRoom, apiLeftRoom, apiRemoveRoom }
 //     playerData[nameInput][ANSWER2] = answer2
 // }
 
-// // function getPrompt() {
-// //     apiPrompt = listOfPrompts[Math.floor(Math.random() * listOfPrompts.length)]
-
-// //     gamePromp = apiPrompt
-
-// //     return apiPrompt
-// // }
 
 // //arguments given by frontend
 // function promptFillingSequence(answer1, answer2) {
@@ -406,4 +519,3 @@ module.exports = { apiJoinRoom, apiCreateRoom, apiLeftRoom, apiRemoveRoom }
 //     }
 //     winnerDisplay()
 // }
-
