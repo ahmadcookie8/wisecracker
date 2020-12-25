@@ -1,0 +1,5 @@
+- add config so wisecracker automatically switches endpoint between localhost and heroku when hosting
+
+BUGS:
+-Host does not see other players that have joined, the listOfPlayers does not update for him
+whilst it updates for everyone else who's joined
