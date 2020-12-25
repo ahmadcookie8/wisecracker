@@ -235,15 +235,15 @@ const apiRemoveRoom = (roomCode) => {
 module.exports = { apiGetPrompt, apiJoinRoom, apiCreateRoom, apiGetChooser, apiGetTypers, apiGetPlayersAndRoles, apiLeftRoom, apiRemoveRoom }
 
 // TEST CODE TO CREATING AND JOINING A ROOM
-tRoomCode = apiCreateRoom("john")
-apiJoinRoom("milly", tRoomCode)
-apiJoinRoom("dog", tRoomCode)
+// tRoomCode = apiCreateRoom("john")
+// apiJoinRoom("milly", tRoomCode)
+// apiJoinRoom("dog", tRoomCode)
+// // console.log(roomData)
+// console.log(roomData[tRoomCode])
+// console.log(apiLeftRoom("milly", tRoomCode))
+// console.log(roomData[tRoomCode])
+// apiRemoveRoom(tRoomCode)
 // console.log(roomData)
-console.log(roomData[tRoomCode])
-console.log(apiLeftRoom("milly", tRoomCode))
-console.log(roomData[tRoomCode])
-apiRemoveRoom(tRoomCode)
-console.log(roomData)
 
 // TESTING TO SEE IF BLANK NAMES ARE REJECTED
 // console.log(apiCreateRoom(""))

@@ -64,7 +64,7 @@ io.on('connection', function (socket) {
   socket.on("createRoom", function (state) {
     // console.log("from server: " + playerName)
     // io.sockets.emit("playerName", playerName + " has joined!")
-    const playerName = state.playerName.toUpperCase();
+    const playerName = state.playerName;
     // roomCode = state.roomCode;
     const roomCode = apiCreateRoom(playerName)
 
