@@ -31,7 +31,7 @@ const { apiRemoveRoom } = require("./static/WisecrackerBackend")
 // Routing
 app.get("*", function (request, response) {
   // response.sendFile(path.join(__dirname, 'index.html'));
-  response.sendFile(path.join(__dirname, '/client/build/index.html'));
+  response.sendFile(__dirname + '/client/build/index.html');
 });
 
 
