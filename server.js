@@ -18,8 +18,7 @@ app.use(bodyParser.json({
 const cors = require("cors")
 
 app.set('port', 5000);
-// app.use('/static', express.static(__dirname + '/static'));
-app.use(express.static(__dirname + '/static'));
+app.use('/static', express.static(__dirname + '/static'));
 app.use(express.static(__dirname + '/client/build'));
 
 //WisecrackerBackend functions
