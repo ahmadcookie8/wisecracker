@@ -102,7 +102,7 @@ const SCORE = 2
 //     return playerWithHighestScore
 // }
 
-export function apiJoinRoom(playerJoining, roomCode) {
+const apiJoinRoom = (playerJoining, roomCode) => {//function apiJoinRoom(playerJoining, roomCode) {
   roomCode = roomCode.toUpperCase()
   playerJoining = playerJoining.toUpperCase()
 
@@ -121,7 +121,7 @@ export function apiJoinRoom(playerJoining, roomCode) {
   }
 }
 
-export function apiCreateRoom(playerCreating) {
+const apiCreateRoom = (playerCreating) => {//function apiCreateRoom(playerCreating) {
   let allCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   let roomCode = ""
   playerCreating = playerCreating.toUpperCase()
@@ -149,15 +149,33 @@ export function apiCreateRoom(playerCreating) {
   return roomCode
 }
 
-export function apiCreateRoomWithRoomCode(playerCreating, givenRoomCode) {
-  playerCreating = playerCreating.toUpperCase()
-  let roomCode = givenRoomCode.toUpperCase()
-
-  roomData[roomCode] = {}
-  roomData[roomCode][playerCreating] = ["", "", 0]
-
-  return roomCode
+//TODO CHECK IF roomCode AND playerLeaving EXISTS BEFORE LEAVING
+const apiLeftRoom = (playerLeaving, roomCode) => {
+  delete roomData[roomCode][playerLeaving.toUpperCase()]
+  return Object.keys(roomData[roomCode])
 }
+
+const apiRemoveRoom = (roomCode) => {
+  let listOfRoomCodes = Object.keys(roomData)
+
+  roomCode = roomCode.toUpperCase()
+
+  if (listOfRoomCodes.includes(roomCode)) {
+    delete roomData[roomCode]
+  }
+}
+
+module.exports = { apiJoinRoom, apiCreateRoom, apiLeftRoom, apiRemoveRoom }
+
+// export function apiCreateRoomWithRoomCode(playerCreating, givenRoomCode) {
+//   playerCreating = playerCreating.toUpperCase()
+//   let roomCode = givenRoomCode.toUpperCase()
+
+//   roomData[roomCode] = {}
+//   roomData[roomCode][playerCreating] = ["", "", 0]
+
+//   return roomCode
+// }
 
 ////////////////////////////////////////
 // function promptListMaker() {
