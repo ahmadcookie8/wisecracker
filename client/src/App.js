@@ -2,129 +2,53 @@ import React, { useState, useEffect } from 'react';
 import socketIOClient from "socket.io-client";
 
 
-// import { Route, Switch, BrowserRouter } from 'react-router-dom';
+import { Route, Switch, BrowserRouter } from 'react-router-dom';
 // import { uid } from 'react-uid';
 import './App.css';
 
 
-const { testCall } = require("./test")
-const { apiCreateRoom } = require("./WisecrackerBackend")
-const { apiJoinRoom } = require("./WisecrackerBackend")
+//import pages
+import MainPage from "./react-components/MainPage"
+import LobbyPage from "./react-components/LobbyPage"
+
 
 const ENDPOINT = "http://localhost:5000";
 
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
-
-
-
-
-
 
 function App() {
-  const [response, setResponse] = useState("");
-  const [state, setState] = useState({ playerName: "", roomCode: "", players: [] })
+  const [state, setState] = useState({ loggedIn: false, socket: null }) //socket is created here and assigned to socket
 
-  useEffect(() => {
-    const socket = socketIOClient(ENDPOINT);
-    socket.on("message", data => {
-      // setResponse(data);
-      console.log(data)
-    });
-
-    socket.on("playerName", data => {
-      console.log(data)
-    });
-
-    // CLEAN UP THE EFFECT
-    // return () => socket.disconnect();
-
-  }, []);
-
-  // state = {
-  //   gabagoo: false,
-  //   playerName: "",
-  //   roomCode: ""
-  // }
-
-  function handleChange(event) {
-    const target = event.target;
-    const value = target.value;
-    const name = target.name;
-
-    // this.setState({
-    //   [name]: value
-    // })
-
-    setState(prevState => ({ ...prevState, [name]: value }))
-  }
-
-  function createRoom() {
-    console.log("Room Created as " + state.playerName + "!")
-    console.log(testCall())
-    // console.log(response)
-
-    //call WisecrackerBackend.js#createRoom(state.playerName) and expect roomCode back 
-    let roomCode = apiCreateRoom(state.playerName)
-    state.roomCode = roomCode
-
-    const socket = socketIOClient(ENDPOINT);
-    socket.emit("createRoom", state)
-  }
-
-  function joinRoom() {
-    console.log("Joined Room " + state.roomCode + "!")
-
-    console.log("ZZZZ", state.playerName, state.roomCode)
-    let players = apiJoinRoom(state.playerName, state.roomCode)
-
-    if (typeof players === "string") {
-      const errorMessage = players
-      //display errorMessage on screen
-      console.log(errorMessage)
-    } else { //we're gucci
-
-      state.players = players
-
-      const socket = socketIOClient(ENDPOINT);
-      socket.emit("joinRoom", state)
+  function initializeSocket() {
+    if (state.socket === null) { //only create socket if it hasn't been created yet
+      setState(prevState => ({ ...prevState, socket: socketIOClient(ENDPOINT) }))
     }
   }
 
+
+
+  function setAppState(value) {
+    console.log("AYO", value)
+    setState(value)
+    console.log(state)
+  }
+
   return (
-    <div id="background">
-      <div className="page">
-        <h1 className="title">Wise Cracker</h1>
+    <div>
+      {initializeSocket()}
+      <BrowserRouter>
+        <Switch>
+          {/* routes */}
+          <Route exact path="/" render={() => <MainPage appState={state} setAppState={setAppState} />} />
+          <Route path="/lobby" render={() => {
+            console.log(state);
+            if (state.loggedIn) { return <LobbyPage appState={state} setAppState={setAppState} /> } else { return <MainPage appState={state} setAppState={setAppState} /> }
+            // return <LobbyPage appState={state} />
+          }} />
 
-        <input className="player-name-input" name="playerName" placeholder="Player Name" onChange={handleChange} />
-        <div>
-          <button className="create-room" onClick={() => createRoom()}>Create Room</button>
-        </div>
-
-        <input className="player-name-input" name="roomCode" placeholder="Room Code" onChange={handleChange} />
-        <div>
-          <button className="create-room" onClick={() => joinRoom()}>Join Room</button>
-        </div>
-
-      </div>
+          {/* 404 if URL isn't expected */}
+          <Route render={() => <div>404: Bro where even are you???</div>} />
+        </Switch>
+      </BrowserRouter>
     </div>
 
   )

@@ -257,6 +257,7 @@ console.log(roomData)
 //     //TODO RELOCATE TEXT FILE OF PROMPTS
 //     let listOfPrompts = []
 //     listOfPrompts = fs.readFile('listOfPrompts.txt', 'utf-8', (err, data) => {
+
 //         if (err) throw err;
 
 //         // Converting Raw Buffer to text 
@@ -372,6 +373,7 @@ function roleAssigner(roomCode) {
 
 
 
+
 //     for (let i = 0; i < listOfPlayers.length; i++) {
 //         if (listOfPlayers[i] !== chooser) {
 //             listOfTypers.push(listOfPlayers[i])
@@ -389,6 +391,7 @@ function roleAssigner(roomCode) {
 //     playerData[nameInput][ANSWER1] = answer1
 //     playerData[nameInput][ANSWER2] = answer2
 // }
+
 
 // //arguments given by frontend
 // function promptFillingSequence(answer1, answer2) {
