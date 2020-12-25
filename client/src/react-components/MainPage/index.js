@@ -36,7 +36,7 @@ function MainPage(props) {
     // });
 
     socket.on("roomCreated", roomCode => {
-      if (typeof roomCode === "string") {
+      if (roomCode.length !== 4) { //i.e. roomCode is not a valid roomCode thus it's an error
         const errorMessage = roomCode
         console.log(errorMessage)
       } else {
