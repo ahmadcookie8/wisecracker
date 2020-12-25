@@ -36,11 +36,19 @@ function MainPage(props) {
     // });
 
     socket.on("roomCreated", roomCode => {
-      const newRoomCode = roomCode.toUpperCase()
-      setState(prevState => ({ ...prevState, roomCode: newRoomCode }))
-      setState(prevState => ({ ...prevState, goToLobby: "host" })) //this triggers a redirect to the lobby page
+      if (typeof roomCode === "string") {
+        const errorMessage = roomCode
+        console.log(errorMessage)
+      } else {
 
-      props.setAppState(prevAppState => ({ ...prevAppState, loggedIn: true }))
+        const newRoomCode = roomCode.toUpperCase()
+        setState(prevState => ({ ...prevState, roomCode: newRoomCode }))
+        setState(prevState => ({ ...prevState, goToLobby: "host" })) //this triggers a redirect to the lobby page
+
+        props.setAppState(prevAppState => ({ ...prevAppState, loggedIn: true }))
+      }
+
+
 
     });
 
@@ -54,9 +62,10 @@ function MainPage(props) {
         const newPlayers = players
         setState(prevState => ({ ...prevState, players: newPlayers }))
         setState(prevState => ({ ...prevState, goToLobby: "nonHost" })) //this triggers a redirect to the lobby page
+
+        props.setAppState(prevAppState => ({ ...prevAppState, loggedIn: true }))
       }
 
-      props.setAppState(prevAppState => ({ ...prevAppState, loggedIn: true }))
     });
 
     // CLEAN UP THE EFFECT

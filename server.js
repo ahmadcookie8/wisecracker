@@ -71,21 +71,27 @@ io.on('connection', function (socket) {
     // roomCode = state.roomCode;
     const roomCode = apiCreateRoom(playerName)
 
-    socket.join(roomCode)
+    if (typeof roomCode !== "string") {//no error in creating room
 
-    // let player = {}
-    // player[playerName] = socket.id
-    if (Object.keys(serverInfo).includes(roomCode)) { //if roomCode exists in serverInfo, add player to it
-      serverInfo[roomCode][playerName] = { "socketId": socket.id, "host": true }//serverInfo[roomCode].push(player)
-    } else { //if roomCode doesn't exist in serverInfo, initialize it with player
-      serverInfo[roomCode] = {}
-      serverInfo[roomCode][playerName] = { "socketId": socket.id, "host": true }//[player]
+      socket.join(roomCode)
+
+      // let player = {}
+      // player[playerName] = socket.id
+      if (Object.keys(serverInfo).includes(roomCode)) { //if roomCode exists in serverInfo, add player to it
+        serverInfo[roomCode][playerName] = { "socketId": socket.id, "host": true }//serverInfo[roomCode].push(player)
+      } else { //if roomCode doesn't exist in serverInfo, initialize it with player
+        serverInfo[roomCode] = {}
+        serverInfo[roomCode][playerName] = { "socketId": socket.id, "host": true }//[player]
+      }
+
+      socket.emit("roomCreated", roomCode)
+
+      console.log("serverInfo: ", serverInfo)
+      console.log(playerName + " has joined room " + roomCode)
+    } else { //error in creating
+      const errorMessage = roomCode
+      socket.emit("roomCreated", errorMessage) //let person trying to join know that joining failed
     }
-
-    socket.emit("roomCreated", roomCode)
-
-    console.log("serverInfo: ", serverInfo)
-    console.log(playerName + " has joined room " + roomCode)
 
   })
 
