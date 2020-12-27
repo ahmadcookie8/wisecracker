@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import socketIOClient from "socket.io-client";
+import socketIOClient, { io } from "socket.io-client";
 import { Redirect } from 'react-router-dom';
 
 import '../../App.css';
@@ -10,7 +10,6 @@ import '../../App.css';
 // const { apiCreateRoom } = require("../../WisecrackerBackend")
 // const { apiJoinRoom } = require("../../WisecrackerBackend")
 
-const ENDPOINT = "http://localhost:5000";
 
 
 function LobbyPage(props) {
@@ -40,16 +39,33 @@ function LobbyPage(props) {
       setState(prevState => ({ ...prevState, players: newPlayers }))
     });
 
-    socket.on("roomLeft", players => { //someone has joined the lobby
+    socket.on("roomLeft", players => {
       console.log("a player has left")
       const newPlayers = players
       setState(prevState => ({ ...prevState, players: newPlayers }))
     });
 
-    socket.on("removeRoom", () => { //someone has joined the lobby
+    socket.on("removeRoom", () => {
       console.log("this room is being removed")
       setState(prevState => ({ ...prevState, deleteRoom: true }))
     });
+
+    socket.on("gameStarted", playersAndRoles => {
+      if (typeof playersAndRoles === "string") { //error
+        const errorMessage = playersAndRoles
+        console.log(errorMessage)
+      } else { //game started succesfully
+        // TODO: find your role and redirect to page and pass your role with it
+        const role = playersAndRoles[state.playerName]
+        console.log("Game is now starting as role " + role)
+        setState(prevState => ({ ...prevState, startGame: role })) //this triggers a redirect to the lobby page
+
+        socket.emit("getNewPrompt") //request prompt so we can get it after the redirect we triggered above
+        socket.emit("getChooser", state.roomCode) //request chooser so we can get it after the redirect we triggered above
+        socket.emit("getTypers", state.roomCode) //request typers so we can get it after the redirect we triggered above
+      }
+    });
+
 
     // CLEAN UP THE EFFECT
     // return () => socket.disconnect();
@@ -69,7 +85,7 @@ function LobbyPage(props) {
     if (isHost) {
       return (
         <div>
-          <button className="button1">Start Game</button>
+          <button className="button1" onClick={() => { socket.emit("startGame", state.roomCode) }}>Start Game</button>
         </div>
       )
     }
@@ -88,27 +104,51 @@ function LobbyPage(props) {
   function displayPlayerNames() {
     // socket.emit("getPlayers", )
     return <div>
-      <h2 className="player-name">Players: </h2>
+      <h3 className="player-name text-colour-1">Players: </h3>
       {console.log("displayPlayerNames()", state.players)}
       {state.players.map(player => {
         if (player.toUpperCase() === state.playerName.toUpperCase()) { //if displaying this player name, be green
-          return (<h4 className="this-player-name">{player}</h4>)
+          return (<h4 className="this-player-name text-colour-2">{player}</h4>)
         } else { //else display other player names normally
-          return (<h4 className="player-name">{player}</h4>)
+          return (<h4 className="player-name text-colour-3">{player}</h4>)
         }
       })}
     </div>
   }
 
+  function redirectToRoundPlaying() {
+    const stateToSend = state
+    stateToSend.prompt = ""
+    stateToSend.chooser = ""
+    stateToSend.typers = []
+    stateToSend.numAnswersExpected = 0
+    stateToSend.answer = []
+    stateToSend.playersAndAnswers = []
+    stateToSend.numAnswersRevealed = -1
+    stateToSend.winnerAndAnswer = {}
+    stateToSend.playerAndScores = {}
+    stateToSend.returnToLobby = false
+    if (state.startGame === "chooser") {
+      return (
+        <Redirect to={{ pathname: "/roundPlaying", role: "chooser", state: stateToSend }} />
+      )
+    } else if (state.startGame === "typer") {
+      return (
+        <Redirect to={{ pathname: "/roundPlaying", role: "typer", state: stateToSend }} />
+      )
+    }
+  }
+
   return (
-    <div id="background">
+    <div id="background" className="background-colour-1">
       <div className="page">
-        <h1 className="title">Lobby</h1>
-        <h2 className="room-code">Room Code: {state.roomCode}</h2>
+        {/* <h1 className="title title-colour-1">Lobby</h1> */}
+        <h2 className="room-code title-colour-1">Room Code: {state.roomCode}</h2>
         {displayPlayerNames()}
         {displayStartGameButton(useLocation().host)}
         {console.log(state)}
 
+        {redirectToRoundPlaying()}
         {checkIfRoomNeedsToBeRemoved()}
       </div>
     </div>

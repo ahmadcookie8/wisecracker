@@ -10,7 +10,6 @@ import '../../App.css';
 // const { apiCreateRoomWithRoomCode } = require("../../WisecrackerBackend")
 // const { apiJoinRoom } = require("../../WisecrackerBackend")
 
-const ENDPOINT = "http://localhost:5000";
 
 
 function MainPage(props) {
@@ -152,9 +151,9 @@ function MainPage(props) {
   }
 
   return (
-    <div id="background">
+    <div id="background" className="background-colour-1">
       <div className="page">
-        <h1 className="title">Wise Cracker</h1>
+        <h1 className="title title-colour-1">Wise Cracker</h1>
 
         <input className="player-name-input" name="playerName" placeholder="Player Name" onChange={handleChange} />
         <div>

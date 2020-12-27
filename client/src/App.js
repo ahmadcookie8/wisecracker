@@ -10,10 +10,11 @@ import './App.css';
 //import pages
 import MainPage from "./react-components/MainPage"
 import LobbyPage from "./react-components/LobbyPage"
+import RoundPlayingPage from "./react-components/RoundPlayingPage"
 
 
-const ENDPOINT = "https://thawing-ocean-59152.herokuapp.com/"
-// const ENDPOINT = "http://localhost:5000";
+// const ENDPOINT = "https://thawing-ocean-59152.herokuapp.com/"
+const ENDPOINT = "http://localhost:5000";
 
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
             if (state.loggedIn) { return <LobbyPage appState={state} setAppState={setAppState} /> } else { return <MainPage appState={state} setAppState={setAppState} /> }
             // return <LobbyPage appState={state} />
           }} />
+          <Route path="/roundPlaying" render={() => <RoundPlayingPage appState={state} setAppState={setAppState} />} />
 
           {/* 404 if URL isn't expected */}
           <Route render={() => <div>404: Bro where even are you???</div>} />
