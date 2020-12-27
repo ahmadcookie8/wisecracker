@@ -22,6 +22,7 @@
   "homepage": "https://github.com/JustHuzaifa/wisecracker#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "react-uid": "^2.3.1",
     "socket.io": "^3.0.4"
   }
 }
