@@ -13,7 +13,7 @@ import LobbyPage from "./react-components/LobbyPage"
 import RoundPlayingPage from "./react-components/RoundPlayingPage"
 
 
-const ENDPOINT = "https://thawing-ocean-59152.herokuapp.com/"
+const ENDPOINT = "https://thawing-ocean-59152.herokuapp.com/" 
 // const ENDPOINT = "http://localhost:5000";
 
 
