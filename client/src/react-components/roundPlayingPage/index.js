@@ -332,8 +332,8 @@ function RoundPlayingPage(props) {
           })}
 
           
-          {role === "chooser" && !didTheyWinGame && <button className="button1" onClick={() => {startNextRound()}}>Start Next Round</button>}
-          {role === "chooser" && didTheyWinGame && <button className="button1" onClick={() => {socket.emit("returnToLobby", state.roomCode)}}>Return To Lobby</button>}
+          {/*role === "chooser"*/state.goToLobby === "host" && !didTheyWinGame && <button className="button1" onClick={() => {startNextRound()}}>Start Next Round</button>}
+          {/*role === "chooser"*/state.goToLobby === "host" && didTheyWinGame && <button className="button1" onClick={() => {socket.emit("returnToLobby", state.roomCode)}}>Return To Lobby</button>}
         </div>
 
       )
