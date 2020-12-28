@@ -54,6 +54,7 @@ function LobbyPage(props) {
       if (typeof playersAndRoles === "string") { //error
         const errorMessage = playersAndRoles
         console.log(errorMessage)
+        // window.alert(errorMessage)
       } else { //game started succesfully
         // TODO: find your role and redirect to page and pass your role with it
         const role = playersAndRoles[state.playerName]
@@ -109,7 +110,7 @@ function LobbyPage(props) {
   function displayPlayerNames() {
     // socket.emit("getPlayers", )
     return <div>
-      <h3 className="player-name text-colour-1">Players: </h3>
+      <h3 className="player-name text-colour-1">Players (minimum 3 required): </h3>
       {console.log("displayPlayerNames()", state.players)}
       {state.players.map(player => {
         if (player.toUpperCase() === state.playerName.toUpperCase()) { //if displaying this player name, be green

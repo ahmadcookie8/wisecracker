@@ -407,7 +407,10 @@ const apiJoinRoom = (playerJoining, roomCode) => {
 
           return Object.keys(allConnectedPlayers[roomCode])
         } else {
-          if (!listOfPlayersInRoom.includes(playerJoining.toUpperCase)) {
+          listOfPlayersInRoom = listOfPlayersInRoom.map(element => {
+            return element.toUpperCase()
+          });
+          if (!listOfPlayersInRoom.includes(playerJoining.toUpperCase())) {
             allConnectedPlayers[roomCode][playerJoining] = [[], 0, ""]
             return Object.keys(allConnectedPlayers[roomCode])
           } else {
@@ -522,7 +525,7 @@ const apiStartGame = (roomCode) => {
 //to reset roles to "" upon going back to lobby
 const apiReturnToLobby = (roomCode) => {
   let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
-  
+
   listOfPlayers.map((element) => {
     allConnectedPlayers[roomCode][element][ANSWERS] = []
     allConnectedPlayers[roomCode][element][ROLE] = ""
