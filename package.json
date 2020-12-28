@@ -1,0 +1,28 @@
+{
+  "name": "wisecracker",
+  "version": "1.0.0",
+  "description": "Wisecrack, but better.",
+  "main": "index.js",
+  "scripts": {
+    "test": "cd client && npm run build && cd .. && node server.js",
+    "start": "node server.js",
+    "setup": "npm install && cd client && npm install && cd ..",
+    "build-run": "cd client && npm run build && cd .. && node server.js",
+    "heroku-postbuild": "cd client && npm install && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JustHuzaifa/wisecracker.git"
+  },
+  "author": "Huzaifa Sheikh, Ahmad Sheikh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JustHuzaifa/wisecracker/issues"
+  },
+  "homepage": "https://github.com/JustHuzaifa/wisecracker#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "react-uid": "^2.3.1",
+    "socket.io": "^3.0.4"
+  }
+}

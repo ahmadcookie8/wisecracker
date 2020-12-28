@@ -1,0 +1,46 @@
+- add config so wisecracker automatically switches endpoint between localhost and heroku when hosting
+- add option for host to change the score limit of the round on lobby page
+- in roleAssigner make the first chooser random, and it continues cycling from there
+<> make answering system dynamic and that they can answer depending on how many underscores there are
+in the prompt. This will give more freedom when working with custom prompts
+<> fix chooserIndex because when a room is created, and index 0 is chosen as chooser, and then chooserIndex++ happens. 
+it stays that way for the next round. So if index = 5 happens to be current chooserIndex and a room 
+of 3 is created, an out of bounds exception would occur
+<> same as above but for underscoreCount
+
+- Make a thing for every round of the game where things like underscoreCount and the player's answers get reset to default 
+
+- players can join in the middle of the round, but they wait in the lobby until the round is done
+
+- when displaying the answers on the choose answers screen, have the answers in the prompt be a different colour to show
+the answers that were put in (might not be possible since the text is displayed inside a button)
+
+- for next round return object with names as keys and their roles as values
+
+-in apiStartGame check if the roles of the players are "" before calling roleAssigner, so when going to start a game after one
+finishes, it doesn't call roleAssigner twice; once in nextRound the other in startGame
+
+BUGS:
+<> Host does not see other players that have joined, the listOfPlayers does not update for him
+whilst it updates for everyone else who's joined
+
+-at line 255 when someone tries joining room without entering a roomCode it says it's undefined (something like that)
+	-> let listOfDisconnectedPlayersInRoom = Object.keys(allDisconnectedPlayers[roomCode])
+-duplicate names get put into the game, and they take the same spot as the person who occupied the same name
+
+- mayhaps have an end game button that host can push whenever that kicks everyone back to lobby (or main page if not possible)
+
++ Kicking scheme for midgame:
+	+ when a non host leaves midgame, trigger a new round and alert everyone
+	+ when a host leaves midgame, kick everyone back to main page
+	+ when non host leaves midgame and there ends up being < 3 players, kick everyone back to main page too
+
+- I might be calling newPrompt from everyplayer because in a game with 5 players, the chooser's prompt switched through several quickly
+
+- in prompt choosing, make instructions clearer (say they can generate new prompt or write their own)
+
+- make the room deleting happen when a lobby is empty, not when a host leaves
+
+- allow host ot choose max score to win in lobby
+
+- delete room when lobby is empty

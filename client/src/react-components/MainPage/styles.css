@@ -1,0 +1,53 @@
+@font-face {
+  font-family: Roboto;
+  src: url("../../Roboto-Regular.ttf");
+}
+
+#background {
+  background-color: #525252;
+  min-height: 100vh;
+  min-width: 100vw;
+  position: absolute;
+  
+}
+
+.page {
+  margin-left: 30px;
+  margin-right: 30px;
+  margin-top: 60px;
+  text-align: center;
+  font-size: x-large;
+}
+
+.title {
+  text-align: center;
+  color: #FFD73D;
+  margin-bottom: 70px;
+  font-family: Roboto;
+}
+
+.player-name-input {
+  display: inline-block;
+  font-size: x-large;
+  font-family: Roboto;
+}
+
+.button1 {
+  display: inline-block;
+  font-size: x-large;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  background-color: #FFD73D;
+  border:none;
+  border-radius: 5px;
+  font-family: Roboto;
+}
+
+.button1:active{
+  background-color: #EEAD1F;
+  outline:none;
+}
+
+.button1:focus{
+  outline:none;
+}

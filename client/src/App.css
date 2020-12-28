@@ -1,0 +1,161 @@
+@font-face {
+  font-family: Roboto;
+  src: url("Roboto-Regular.ttf");
+}
+
+:root {
+  --background-colour-1: #212121;
+  --title-colour-1: #ea7326;
+  --text-colour-1: #f8ce96;
+  --text-colour-2: #bf9a62;
+  --text-colour-3: #a2631b;
+  --text-colour-4: #6b4812;
+}
+
+.background-colour-1{
+  background-color: #212121;
+}
+
+.title-colour-1{
+  color: #ea7326;
+}
+
+.text-colour-1{
+  color: #f8ce96;
+}
+
+.text-colour-2{
+  color: #bf9a62;
+}
+
+.text-colour-3{
+  color: #a2631b;
+}
+
+.text-colour-4{
+  color: #6b4812;
+}
+
+#background {
+  /* background-color: #212121; */
+  min-height: 100vh;
+  min-width: 100vw;
+  position: absolute;
+  
+}
+
+.page {
+  margin-left: 30px;
+  margin-right: 30px;
+  margin-top: 60px;
+  text-align: center;
+  font-size: x-large;
+}
+
+.title {
+  text-align: center;
+  /* color: #FFD73D; */
+  margin-bottom: 70px;
+  font-family: Roboto;
+}
+
+.player-name-input {
+  display: inline-block;
+  font-size: x-large;
+  font-family: Roboto;
+  background-color:  var(--text-colour-1);
+  color:  var(--text-colour-4);
+}
+
+.button1 {
+  display: inline-block;
+  font-size: x-large;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  background-color: var(--title-colour-1);
+  color: black;
+  border:none;
+  border-radius: 5px;
+  font-family: Roboto;
+}
+
+.button1:active{
+  background-color: #c26528;
+  outline:none;
+}
+
+.button1:focus{
+  outline:none;
+}
+
+.button2 {
+  display: inline-block;
+  font-size: x-large;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f8ce96;
+  color: black;
+  border:none;
+  border-radius: 5px;
+  font-family: Roboto;
+}
+
+.button2:active{
+  background-color: #cea36b;
+  outline:none;
+}
+
+.button2:focus{
+  outline:none;
+}
+
+
+.player-name{
+  margin-bottom: 5px;
+  margin-top: 5px;
+  /* font-size: 18px; */
+}
+
+.this-player-name{
+  /* color: #09ce34;*/
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+.room-code {
+  /* color: #ffae00; */
+  margin-top: -40px;
+  font-family: Roboto;
+}
+
+.choosing-prompt {
+  display: inline-block;
+  font-size: 18px;
+  max-width: 75%;
+  min-width: 75%;
+  min-height: 150px;
+  font-family: Roboto;
+}
+
+.answer-box {
+  width: 75%;
+  font-size: 18px;
+  font-family: Roboto;
+  display: inline-block;
+}
+
+.typer-still-typing {
+  color: white; 
+  font-size: 18px;
+}
+
+.prompt {
+  font-size: 20px;
+  color: var(--text-colour-1);
+}
+
+.white-text {
+  font-size: 20px;
+  color: white;
+}
