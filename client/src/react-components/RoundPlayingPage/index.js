@@ -180,6 +180,22 @@ function RoundPlayingPage(props) {
       socket.emit("returnToLobby", state.roomCode)
     });
 
+    socket.on("triggerReturnToLobbyFromDisconnectionAlert", (personWhoLeft) => {
+      window.alert("There are less than 3 people since " + personWhoLeft + " left, returning to lobby.")
+    });
+
+    socket.on("triggerReturnToLobbyFromDisconnectingHost", () => {
+      setState(prevState => ({ ...prevState, goToLobby: "host" }))
+      socket.emit("returnToLobby", state.roomCode)
+    });
+
+    socket.on("triggerReturnToLobbyFromDisconnectingHostAlert", (hosts) => {
+      const oldHost = hosts.oldHost
+      const newHost = hosts.newHost
+      console.log("Host " + oldHost + " left so everyone is returning to lobby with " + newHost + " as the new host.")
+      window.alerts("Host " + oldHost + " left so everyone is returning to lobby with " + newHost + " as the new host.")
+    });
+    
     
 
   }, []);

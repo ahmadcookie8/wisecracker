@@ -67,11 +67,15 @@ function LobbyPage(props) {
       }
     });
 
+    socket.on("triggerReturnToLobbyFromDisconnectingHost", () => {
+      setState(prevState => ({ ...prevState, goToLobby: "host" }))
+    });
+
 
     // CLEAN UP THE EFFECT
     // return () => socket.disconnect();
 
-  }, /*[]*/);
+  });
 
   function handleChange(event) {
     const target = event.target;
@@ -83,7 +87,7 @@ function LobbyPage(props) {
   }
 
   function displayStartGameButton(isHost) {
-    if (isHost) {
+    if (isHost === "host") {
       return (
         <div>
           <button className="button1" onClick={() => { socket.emit("startGame", state.roomCode) }}>Start Game</button>
@@ -146,7 +150,8 @@ function LobbyPage(props) {
         {/* <h1 className="title title-colour-1">Lobby</h1> */}
         <h2 className="room-code title-colour-1">Room Code: {state.roomCode}</h2>
         {displayPlayerNames()}
-        {displayStartGameButton(useLocation().host)}
+        {displayStartGameButton(state.goToLobby)}
+        {/* useLocation().host)} */}
         {console.log(state)}
 
         {redirectToRoundPlaying()}

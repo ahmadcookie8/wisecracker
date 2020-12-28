@@ -250,7 +250,8 @@ io.on('connection', function (socket) {
   });
 
   socket.on("returnToLobby", roomCode => {
-    const playersAndRoles = apiNextRound(roomCode) //e.g.{"joey": "typer", "henry": "chooser", "josh": ""}
+    // const playersAndRoles = apiNextRound(roomCode) //e.g.{"joey": "typer", "henry": "chooser", "josh": ""}
+    const playersAndRoles = apiReturnToLobby(roomCode)
     apiReturnToLobby(roomCode)
     io.to(roomCode).emit("returnToLobby", playersAndRoles)
   });
@@ -275,11 +276,22 @@ io.on('connection', function (socket) {
 
           if (isHost) { //if player leaving was a host, decimate the room and kick everyone out
             //handles lobby logic
-            apiRemoveRoom(room) //let game know the room should be removed
-            io.to(room).emit("removeRoom") //let everyone in room know the room is being removed
-            delete serverInfo[room] //delete room from serverInfo
+            // apiRemoveRoom(room) //let game know the room should be removed
+            // io.to(room).emit("removeRoom") //let everyone in room know the room is being removed
+            // delete serverInfo[room] //delete room from serverInfo
 
             //handles roundPlaying logic
+            //return to lobby and change hostmanship to next person from serverInfo
+            const players = Object.keys(serverInfo[room])
+            return players.every((player) => {
+              if (!serverInfo[room][player].host) { //this is the first player that isn't a host
+                serverInfo[room][player].host = true //set to host in serverInfo
+                const hostToBeSocketId = serverInfo[room][player].socketId
+                io.to(hostToBeSocketId).emit("triggerReturnToLobbyFromDisconnectingHost")  //let host-to-be know to return to lobby since someone left and to set itself to host
+                io.to(room).emit("triggerReturnToLobbyFromDisconnectingHostAlert", { oldHost: playerName, newHost: player })//trigger an alert for everyone in the room
+                return false
+              }
+            })
 
           } else { //person that disconnected is not a host
             //go to new round and alert everyone
@@ -299,11 +311,10 @@ io.on('connection', function (socket) {
                 if (serverInfo[room][player].host) { //if player is host
                   const hostSocketId = serverInfo[room][player].socketId
                   io.to(hostSocketId).emit("triggerReturnToLobbyFromDisconnection")  //let host know to trigger a return to lobby since < 3 players left now
-                  // io.to(room).emit("triggerNewRoundFromDisconnectionAlert", playerName)//trigger an alert for everyone in the room
+                  io.to(room).emit("triggerReturnToLobbyFromDisconnectionAlert", playerName)//trigger an alert for everyone in the room
                 }
               })
             }
-
 
           }
 

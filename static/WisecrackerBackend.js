@@ -130,7 +130,7 @@ const apiGetChooser = (roomCode) => {
   // let listOfRoomCodes = Object.keys(allConnectedPlayers)
 
   // if (listOfRoomCodes.includes(roomCode)) {
-  console.log("ZZZZZ apiGetChooser()", roomCode, allConnectedPlayers)
+  // console.log("ZZZZZ apiGetChooser()", roomCode, allConnectedPlayers)
   listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
 
 
@@ -380,35 +380,42 @@ const apiJoinRoom = (playerJoining, roomCode) => {
     });
 
     if (playerJoining !== "") {
-      //checks if disconnected player is rejoining
-      if (listOfDisconnectedPlayersInRoom.includes(playerJoining.toUpperCase())) {
-        allConnectedPlayers[roomCode][playerJoining] = allDisconnectedPlayers[roomCode][playerJoining]
+      let firstPersonInRoom = Object.keys(allConnectedPlayers[roomCode])
+      firstPersonInRoom = firstPersonInRoom[0]
+      if (allConnectedPlayers[roomCode][firstPersonInRoom][ROLE] === "") {
+        //checks if disconnected player is rejoining
+        if (listOfDisconnectedPlayersInRoom.includes(playerJoining.toUpperCase())) {
+          allConnectedPlayers[roomCode][playerJoining] = allDisconnectedPlayers[roomCode][playerJoining]
 
-        if (allConnectedPlayers[roomCode][playerJoining][ROLE] === "chooser") {
-          listOfPlayersInRoom = Object.keys(allConnectedPlayers[roomCode])
+          if (allConnectedPlayers[roomCode][playerJoining][ROLE] === "chooser") {
+            listOfPlayersInRoom = Object.keys(allConnectedPlayers[roomCode])
 
-          //get's the current choosers index
-          chooserIndexOfRoom[roomCode] = listOfPlayersInRoom.indexOf(playerJoining)
+            //get's the current choosers index
+            chooserIndexOfRoom[roomCode] = listOfPlayersInRoom.indexOf(playerJoining)
 
-          //chooses next person in line to be chooser and makes sure chooserIndex does not go out of bounds
-          if (chooserIndexOfRoom[roomCode] < listOfPlayers.length - 1) {
-            chooserIndexOfRoom[roomCode]++
-          } else {
-            chooserIndexOfRoom[roomCode] = 0
+            //chooses next person in line to be chooser and makes sure chooserIndex does not go out of bounds
+            if (chooserIndexOfRoom[roomCode] < listOfPlayers.length - 1) {
+              chooserIndexOfRoom[roomCode]++
+            } else {
+              chooserIndexOfRoom[roomCode] = 0
+            }
+
+            //prevents the person joining from staying as chooser and lets the next person in line become chooser
+            roleAssigner(roomCode)
+            rollCycler(roomCode)
           }
 
-          //prevents the person joining from staying as chooser and lets the next person in line become chooser
-          roleAssigner(roomCode)
-        }
-
-        return Object.keys(allConnectedPlayers[roomCode])
-      } else {
-        if (!listOfPlayersInRoom.includes(playerJoining.toUpperCase)) {
-          allConnectedPlayers[roomCode][playerJoining] = [[], 0, ""]
           return Object.keys(allConnectedPlayers[roomCode])
         } else {
-          return "Name Taken"
+          if (!listOfPlayersInRoom.includes(playerJoining.toUpperCase)) {
+            allConnectedPlayers[roomCode][playerJoining] = [[], 0, ""]
+            return Object.keys(allConnectedPlayers[roomCode])
+          } else {
+            return "Name Taken"
+          }
         }
+      } else {
+        return "The game is still in progress. Wait until the game is finished"
       }
     } else {
       return "Enter a Valid Name"
@@ -449,7 +456,7 @@ const apiCreateRoom = (playerCreating) => {
   underscoreCountOfRoom[roomCode] = 0
   randomizedTypersAnswers[roomCode] = {}
   roundWinnerOfRoom[roomCode] = ""
-  maxScoreOfRoom[roomCode] = 1 //TODO <-- change back to 3
+  maxScoreOfRoom[roomCode] = 3 //TODO CHANGE BACK TO 3
 
   if (playerCreating !== "") {
     allConnectedPlayers[roomCode][playerCreating] = [[], 0, ""]
@@ -506,6 +513,7 @@ const apiStartGame = (roomCode) => {
     //checking first players role to see if blank (cuz everyone elses would be blank too)
     if (allConnectedPlayers[roomCode][listOfPlayers[0]][ROLE] === "") {
       roleAssigner(roomCode)
+      rollCycler(roomCode)
     }
     return apiGetPlayersAndRoles(roomCode)
   }
@@ -513,10 +521,27 @@ const apiStartGame = (roomCode) => {
 
 //to reset roles to "" upon going back to lobby
 const apiReturnToLobby = (roomCode) => {
+  let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  
   listOfPlayers.map((element) => {
+    allConnectedPlayers[roomCode][element][ANSWERS] = []
     allConnectedPlayers[roomCode][element][ROLE] = ""
   })
+
+  return apiGetPlayersAndRoles(roomCode)
 }
+
+// const apiNextGame = (roomCode) => {
+//   let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+
+//   listOfPlayers.map((element) => {
+//     allConnectedPlayers[roomCode][element][ANSWERS] = []
+//   })
+
+//   roleAssigner(roomCode)
+
+//   return apiGetPlayersAndRoles(roomCode)
+// }
 
 const apiNextRound = (roomCode) => {
   listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
@@ -526,6 +551,8 @@ const apiNextRound = (roomCode) => {
   })
 
   roleAssigner(roomCode)
+  rollCycler(roomCode)
+
   return apiGetPlayersAndRoles(roomCode)
 }
 
@@ -550,7 +577,7 @@ module.exports = {
   apiNextRound,
   apiSetMaxScore,
   apiGetMaxScore,
-  apiReturnToLobby
+  apiReturnToLobby,
 }
 
 //
@@ -718,23 +745,25 @@ function removeByIndex(str, index) {
 function roleAssigner(roomCode) {
   listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
   let toBeChosen = ""
-  let thereIsAChooser = false
+  // let thereIsAChooser = false
 
   for (let i = 0; i < listOfPlayers.length; i++) {
     allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] = "typer"
   }
 
   toBeChosen = listOfPlayers[chooserIndexOfRoom[roomCode]]
-  console.log("ZZZZZ roleAssigner()", allConnectedPlayers[roomCode])
-  console.log("ZZZZZ roleAssigner()", toBeChosen)
+  // console.log("ZZZZZ roleAssigner()", allConnectedPlayers[roomCode])
+  // console.log("ZZZZZ roleAssigner()", toBeChosen)
   allConnectedPlayers[roomCode][toBeChosen][ROLE] = "chooser"
 
-  for (let i = 0; i < listOfPlayers.length; i++) {
-    if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] !== "chooser") {
-      allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] = "typer"
-    }
-  }
+  // for (let i = 0; i < listOfPlayers.length; i++) {
+  //   if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] !== "chooser") {
+  //     allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] = "typer"
+  //   }
+  // }
+}
 
+const rollCycler = (roomCode) => {
   if (chooserIndexOfRoom[roomCode] < listOfPlayers.length - 1) {
     chooserIndexOfRoom[roomCode]++
   } else {
