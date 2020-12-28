@@ -170,6 +170,16 @@ function RoundPlayingPage(props) {
       window.alert("Restarting round due to " + personWhoLeft + " leaving")
     });
 
+    socket.on("roomLeft", players => {
+      console.log("a player has left")
+      const newPlayers = players
+      setState(prevState => ({ ...prevState, players: newPlayers }))
+    });
+
+    socket.on("triggerReturnToLobbyFromDisconnection", () => {
+      socket.emit("returnToLobby", state.roomCode)
+    });
+
     
 
   }, []);

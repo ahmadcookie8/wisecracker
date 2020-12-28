@@ -40,6 +40,7 @@ const { apiGetScores } = require("./static/WisecrackerBackend")
 const { apiNextRound } = require("./static/WisecrackerBackend")
 const { apiGetMaxScore } = require("./static/WisecrackerBackend")
 const { apiSetMaxScore } = require("./static/WisecrackerBackend")
+const { apiReturnToLobby } = require("./static/WisecrackerBackend")
 
 
 
@@ -250,6 +251,7 @@ io.on('connection', function (socket) {
 
   socket.on("returnToLobby", roomCode => {
     const playersAndRoles = apiNextRound(roomCode) //e.g.{"joey": "typer", "henry": "chooser", "josh": ""}
+    apiReturnToLobby(roomCode)
     io.to(roomCode).emit("returnToLobby", playersAndRoles)
   });
 
@@ -280,16 +282,28 @@ io.on('connection', function (socket) {
             //handles roundPlaying logic
 
           } else { //person that disconnected is not a host
-            //TODO go to new round and alert everyone
-
+            //go to new round and alert everyone
+            //handles roundPlaying logic
             const players = Object.keys(serverInfo[room])
-            players.map((player) => {
-              if (serverInfo[room][player].host) { //if player is host
-                const hostSocketId = serverInfo[room][player].socketId
-                io.to(hostSocketId).emit("triggerNewRoundFromDisconnection")  //let host know to trigger a new round since someone left
-                // io.to(room).emit("triggerNewRoundFromDisconnectionAlert", playerName)//trigger an alert for everyone in the room
-              }
-            })
+
+            if (players.length >= 3) { //if still 3 people in the room, continue game
+              players.map((player) => {
+                if (serverInfo[room][player].host) { //if player is host
+                  const hostSocketId = serverInfo[room][player].socketId
+                  io.to(hostSocketId).emit("triggerNewRoundFromDisconnection")  //let host know to trigger a new round since someone left
+                  io.to(room).emit("triggerNewRoundFromDisconnectionAlert", playerName)//trigger an alert for everyone in the room
+                }
+              })
+            } else { //if theres less than 3 people in the room, kick to lobby
+              players.map((player) => {
+                if (serverInfo[room][player].host) { //if player is host
+                  const hostSocketId = serverInfo[room][player].socketId
+                  io.to(hostSocketId).emit("triggerReturnToLobbyFromDisconnection")  //let host know to trigger a return to lobby since < 3 players left now
+                  // io.to(room).emit("triggerNewRoundFromDisconnectionAlert", playerName)//trigger an alert for everyone in the room
+                }
+              })
+            }
+
 
           }
 

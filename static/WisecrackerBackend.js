@@ -130,6 +130,7 @@ const apiGetChooser = (roomCode) => {
   // let listOfRoomCodes = Object.keys(allConnectedPlayers)
 
   // if (listOfRoomCodes.includes(roomCode)) {
+  console.log("ZZZZZ apiGetChooser()", roomCode, allConnectedPlayers)
   listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
 
 
@@ -448,7 +449,7 @@ const apiCreateRoom = (playerCreating) => {
   underscoreCountOfRoom[roomCode] = 0
   randomizedTypersAnswers[roomCode] = {}
   roundWinnerOfRoom[roomCode] = ""
-  maxScoreOfRoom[roomCode] = 3
+  maxScoreOfRoom[roomCode] = 1 //TODO <-- change back to 3
 
   if (playerCreating !== "") {
     allConnectedPlayers[roomCode][playerCreating] = [[], 0, ""]
@@ -510,6 +511,13 @@ const apiStartGame = (roomCode) => {
   }
 }
 
+//to reset roles to "" upon going back to lobby
+const apiReturnToLobby = (roomCode) => {
+  listOfPlayers.map((element) => {
+    allConnectedPlayers[roomCode][element][ROLE] = ""
+  })
+}
+
 const apiNextRound = (roomCode) => {
   listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
 
@@ -541,7 +549,8 @@ module.exports = {
   apiGetScores,
   apiNextRound,
   apiSetMaxScore,
-  apiGetMaxScore
+  apiGetMaxScore,
+  apiReturnToLobby
 }
 
 //
