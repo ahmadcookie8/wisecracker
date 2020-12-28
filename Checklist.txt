@@ -27,3 +27,14 @@ whilst it updates for everyone else who's joined
 -at line 255 when someone tries joining room without entering a roomCode it says it's undefined (something like that)
 	-> let listOfDisconnectedPlayersInRoom = Object.keys(allDisconnectedPlayers[roomCode])
 -duplicate names get put into the game, and they take the same spot as the person who occupied the same name
+
+- mayhaps have an end game button that host can push whenever that kicks everyone back to lobby (or main page if not possible)
+
++ Kicking scheme for midgame:
+	+ when a non host leaves midgame, trigger a new round and alert everyone
+	+ when a host leaves midgame, kick everyone back to main page
+	+ when non host leaves midgame and there ends up being < 3 players, kick everyone back to lobby
+
+- I might be calling newPrompt from everyplayer because in a game with 5 players, the chooser's prompt switched through several quickly
+
+- in prompt choosing, make instructions clearer (say they can generate new prompt or write their own)

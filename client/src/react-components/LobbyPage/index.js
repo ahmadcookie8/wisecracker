@@ -60,6 +60,7 @@ function LobbyPage(props) {
         console.log("Game is now starting as role " + role)
         setState(prevState => ({ ...prevState, startGame: role })) //this triggers a redirect to the lobby page
 
+        console.log("ZZZZZ LobbyPage#gameStarted: ", state.roomCode)
         socket.emit("getNewPrompt") //request prompt so we can get it after the redirect we triggered above
         socket.emit("getChooser", state.roomCode) //request chooser so we can get it after the redirect we triggered above
         socket.emit("getTypers", state.roomCode) //request typers so we can get it after the redirect we triggered above
@@ -70,7 +71,7 @@ function LobbyPage(props) {
     // CLEAN UP THE EFFECT
     // return () => socket.disconnect();
 
-  }, []);
+  }, /*[]*/);
 
   function handleChange(event) {
     const target = event.target;

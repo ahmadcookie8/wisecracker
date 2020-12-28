@@ -162,6 +162,14 @@ function RoundPlayingPage(props) {
       }
     });
 
+    socket.on("triggerNewRoundFromDisconnection", () => {
+      startNextRound()
+    });
+
+    socket.on("triggerNewRoundFromDisconnectionAlert", (personWhoLeft) => {
+      window.alert("Restarting round due to " + personWhoLeft + " leaving")
+    });
+
     
 
   }, []);

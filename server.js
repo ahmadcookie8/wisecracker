@@ -86,7 +86,7 @@ io.on('connection', function (socket) {
     const playerName = state.playerName;
     // roomCode = state.roomCode;
     const roomCode = apiCreateRoom(playerName)
-    console.log("ZZZZ", roomCode)
+    // console.log("ZZZZ", roomCode)
 
     if (roomCode.length === 4) {//no error in creating room
 
@@ -272,9 +272,25 @@ io.on('connection', function (socket) {
           io.to(room).emit("roomLeft", playersRemaining) //let others in room know they left
 
           if (isHost) { //if player leaving was a host, decimate the room and kick everyone out
+            //handles lobby logic
             apiRemoveRoom(room) //let game know the room should be removed
             io.to(room).emit("removeRoom") //let everyone in room know the room is being removed
             delete serverInfo[room] //delete room from serverInfo
+
+            //handles roundPlaying logic
+
+          } else { //person that disconnected is not a host
+            //TODO go to new round and alert everyone
+
+            const players = Object.keys(serverInfo[room])
+            players.map((player) => {
+              if (serverInfo[room][player].host) { //if player is host
+                const hostSocketId = serverInfo[room][player].socketId
+                io.to(hostSocketId).emit("triggerNewRoundFromDisconnection")  //let host know to trigger a new round since someone left
+                // io.to(room).emit("triggerNewRoundFromDisconnectionAlert", playerName)//trigger an alert for everyone in the room
+              }
+            })
+
           }
 
           return false //breaks out of every call
