@@ -162,6 +162,40 @@ function RoundPlayingPage(props) {
       }
     });
 
+    socket.on("triggerNewRoundFromDisconnection", () => {
+      startNextRound()
+    });
+
+    socket.on("triggerNewRoundFromDisconnectionAlert", (personWhoLeft) => {
+      window.alert("Restarting round due to " + personWhoLeft + " leaving")
+    });
+
+    socket.on("roomLeft", players => {
+      console.log("a player has left")
+      const newPlayers = players
+      setState(prevState => ({ ...prevState, players: newPlayers }))
+    });
+
+    socket.on("triggerReturnToLobbyFromDisconnection", () => {
+      socket.emit("returnToLobby", state.roomCode)
+    });
+
+    socket.on("triggerReturnToLobbyFromDisconnectionAlert", (personWhoLeft) => {
+      window.alert("There are less than 3 people since " + personWhoLeft + " left, returning to lobby.")
+    });
+
+    socket.on("triggerReturnToLobbyFromDisconnectingHost", () => {
+      setState(prevState => ({ ...prevState, goToLobby: "host" }))
+      socket.emit("returnToLobby", state.roomCode)
+    });
+
+    socket.on("triggerReturnToLobbyFromDisconnectingHostAlert", (hosts) => {
+      const oldHost = hosts.oldHost
+      const newHost = hosts.newHost
+      console.log("Host " + oldHost + " left so everyone is returning to lobby with " + newHost + " as the new host.")
+      window.alerts("Host " + oldHost + " left so everyone is returning to lobby with " + newHost + " as the new host.")
+    });
+    
     
 
   }, []);

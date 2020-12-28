@@ -57,107 +57,114 @@ const ROLE = 2
 // }
 
 const apiSetMaxScore = (roomCode, givenMaxScore) => {
-    maxScoreOfRoom[roomCode] = givenMaxScore
+  maxScoreOfRoom[roomCode] = givenMaxScore
 }
 
 const apiGetMaxScore = (roomCode) => {
-    return maxScoreOfRoom[roomCode]
+  return maxScoreOfRoom[roomCode]
 }
 
 const apiSetPlayerAnswer = (roomCode, playerName, answers) => {
-    const listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  const listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
 
-    allConnectedPlayers[roomCode][playerName][ANSWERS] = answers
+  allConnectedPlayers[roomCode][playerName][ANSWERS] = answers
 
-    const typersRemaining = listOfPlayers.filter((player) => {
-        return allConnectedPlayers[roomCode][player][ROLE] === "typer" &&
-            allConnectedPlayers[roomCode][player][ANSWERS].length === 0
-    })
+  const typersRemaining = listOfPlayers.filter((player) => {
+    return allConnectedPlayers[roomCode][player][ROLE] === "typer" &&
+      allConnectedPlayers[roomCode][player][ANSWERS].length === 0
+  })
 
-    //check when typersRemaining is empty and then call setRandomizedPlayerAnswers
-    if (typersRemaining.length === 0) {
-        setRandomizedPlayerAnswers(roomCode)
-    }
+  //check when typersRemaining is empty and then call setRandomizedPlayerAnswers
+  if (typersRemaining.length === 0) {
+    setRandomizedPlayerAnswers(roomCode)
+  }
 
-    return typersRemaining
+  return typersRemaining
 }
 
 const setRandomizedPlayerAnswers = (roomCode) => {
-    let listOfTypers = apiGetTypers(roomCode)
-    let listOfAnswers = listOfTypers.map((player) => { if (allConnectedPlayers[roomCode][player][ROLE] === "typer") { return allConnectedPlayers[roomCode][player][ANSWERS] } })
-    let listOfTypersAnswers = {}
+  let listOfTypers = apiGetTypers(roomCode)
+  let listOfAnswers = listOfTypers.map((player) => { if (allConnectedPlayers[roomCode][player][ROLE] === "typer") { return allConnectedPlayers[roomCode][player][ANSWERS] } })
+  let listOfTypersAnswers = {}
 
-    for (let i = 0; i < listOfTypers.length; i++) {
-        listOfTypersAnswers[listOfTypers[i]] = listOfAnswers[i]
-    }
+  for (let i = 0; i < listOfTypers.length; i++) {
+    listOfTypersAnswers[listOfTypers[i]] = listOfAnswers[i]
+  }
 
-    let listOfRandomizedTypersAnswers = {}
-    let listOfRandomizedTypers = shuffle(listOfTypers)
+  let listOfRandomizedTypersAnswers = {}
+  let listOfRandomizedTypers = shuffle(listOfTypers)
 
-    for (let i = 0; i < listOfTypers.length; i++) {
-        // listOfRandomizedTypersAnswers[listOfRandomizedTypers[i]] = listOfTypersAnswers[listOfRandomizedTypers[i]]
-        listOfRandomizedTypersAnswers[listOfRandomizedTypers[i]] = apiAssigningAnswerToPrompt(roomCode, listOfTypersAnswers[listOfRandomizedTypers[i]])
-    }
-    randomizedTypersAnswers[roomCode] = listOfRandomizedTypersAnswers
+  for (let i = 0; i < listOfTypers.length; i++) {
+    // listOfRandomizedTypersAnswers[listOfRandomizedTypers[i]] = listOfTypersAnswers[listOfRandomizedTypers[i]]
+    listOfRandomizedTypersAnswers[listOfRandomizedTypers[i]] = apiAssigningAnswerToPrompt(roomCode, listOfTypersAnswers[listOfRandomizedTypers[i]])
+  }
+  randomizedTypersAnswers[roomCode] = listOfRandomizedTypersAnswers
 }
 
 const apiGetRandomizedPlayerAnswers = (roomCode) => {
-    return randomizedTypersAnswers[roomCode]
+  return randomizedTypersAnswers[roomCode]
 }
 
 // function apiGetPrompt() {
 const apiGetRandomPrompt = () => {
-    let hasGeneratedPrompt = false
+  let hasGeneratedPrompt = false
 
-    if (!hasGeneratedPrompt) {
-        promptListMaker()
-        hasGeneratedPrompt = true
-    }
+  if (!hasGeneratedPrompt) {
+    promptListMaker()
+    hasGeneratedPrompt = true
+  }
 
-    // console.log(listOfPrompts)
-    let apiPrompt = listOfPrompts[Math.floor(Math.random() * listOfPrompts.length + 1)]
+  // console.log(listOfPrompts)
+  let apiPrompt = listOfPrompts[Math.floor(Math.random() * listOfPrompts.length + 1)]
 
-    gamePrompt = apiPrompt
+  gamePrompt = apiPrompt
 
-    return apiPrompt
+  return apiPrompt
 }
 
 const apiGetPrompt = (roomCode) => {
-    return gamePrompts[roomCode]
+  return gamePrompts[roomCode]
 }
 
 const apiGetChooser = (roomCode) => {
-    listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  // let listOfRoomCodes = Object.keys(allConnectedPlayers)
 
-    for (let i = 0; i < listOfPlayers.length; i++) {
-        if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] === "chooser") {
-            return listOfPlayers[i]
-        }
+  // if (listOfRoomCodes.includes(roomCode)) {
+  // console.log("ZZZZZ apiGetChooser()", roomCode, allConnectedPlayers)
+  listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+
+
+  for (let i = 0; i < listOfPlayers.length; i++) {
+    if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] === "chooser") {
+      return listOfPlayers[i]
     }
+  }
+  // }
+  // return ""
 }
 
 const apiGetTypers = (roomCode) => {
-    listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
-    currentylChosen = apiGetChooser(roomCode)
-    listOfTypers = []
+  listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  currentylChosen = apiGetChooser(roomCode)
+  listOfTypers = []
 
-    for (let i = 0; i < listOfPlayers.length; i++) {
-        if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] !== "chooser") {
-            listOfTypers.push(listOfPlayers[i])
-        }
-
+  for (let i = 0; i < listOfPlayers.length; i++) {
+    if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] !== "chooser") {
+      listOfTypers.push(listOfPlayers[i])
     }
-    return listOfTypers
+
+  }
+  return listOfTypers
 }
 
 const apiGetPlayersAndRoles = (roomCode) => {
-    let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
-    let listOfPlayersAndRoles = {}
+  let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  let listOfPlayersAndRoles = {}
 
-    for (let i = 0; i < listOfPlayers.length; i++) {
-        listOfPlayersAndRoles[listOfPlayers[i]] = allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE]
-    }
-    return listOfPlayersAndRoles
+  for (let i = 0; i < listOfPlayers.length; i++) {
+    listOfPlayersAndRoles[listOfPlayers[i]] = allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE]
+  }
+  return listOfPlayersAndRoles
 }
 
 // function apiAssigningAnswersToPrompts(givenName, prompt, givenRoomCode) {
@@ -208,58 +215,58 @@ const apiGetPlayersAndRoles = (roomCode) => {
 // }
 
 const apiAssigningAnswerToPrompt = (roomCode, answers) => {
-    let fullAnswer = ""
-    prompt = gamePrompts[roomCode]
+  let fullAnswer = ""
+  prompt = gamePrompts[roomCode]
 
-    let underscoresReplaced = 0
+  let underscoresReplaced = 0
 
-    if (underscoreCountOfRoom[roomCode] === 0) {
-        fullAnswer = prompt.trim() + " " + "<br>" + answers[0] + "<br>"
-    } else {
-        for (let i = 0; i < prompt.length; i++) {
-            if (prompt[i] === "_") {
-                prompt = prompt.replace("_", "<br>" + answers[underscoresReplaced] + "<br>")
-                underscoresReplaced++
-            }
-            fullAnswer = prompt
-        }
+  if (underscoreCountOfRoom[roomCode] === 0) {
+    fullAnswer = prompt.trim() + " " + "<br>" + answers[0] + "<br>"
+  } else {
+    for (let i = 0; i < prompt.length; i++) {
+      if (prompt[i] === "_") {
+        prompt = prompt.replace("_", "<br>" + answers[underscoresReplaced] + "<br>")
+        underscoresReplaced++
+      }
+      fullAnswer = prompt
     }
-    fullAnswer = fullAnswer.split("<br>")
-    // console.log(fullAnswer)
-    return fullAnswer
+  }
+  fullAnswer = fullAnswer.split("<br>")
+  // console.log(fullAnswer)
+  return fullAnswer
 }
 
 const apiSetRoundWinner = (roomCode, playerName) => {
-    roundWinnerOfRoom[roomCode] = playerName
-    allConnectedPlayers[roomCode][playerName][SCORE]++
+  roundWinnerOfRoom[roomCode] = playerName
+  allConnectedPlayers[roomCode][playerName][SCORE]++
 }
 
 const apiGetRoundWinner = (roomCode) => {
-    let roundWinner = roundWinnerOfRoom[roomCode]
-    let answers = allConnectedPlayers[roomCode][roundWinner][ANSWERS]
+  let roundWinner = roundWinnerOfRoom[roomCode]
+  let answers = allConnectedPlayers[roomCode][roundWinner][ANSWERS]
 
-    let fullAnswer = apiAssigningAnswerToPrompt(roomCode, answers)
+  let fullAnswer = apiAssigningAnswerToPrompt(roomCode, answers)
 
-    let roundWinnerInfo = {}
-    roundWinnerInfo[roundWinner] = fullAnswer
+  let roundWinnerInfo = {}
+  roundWinnerInfo[roundWinner] = fullAnswer
 
-    if (apiGetScores(roomCode)[roundWinner] >= maxScoreOfRoom[roomCode]) {
-        roundWinnerInfo["winner"] = true
-    } else {
-        roundWinnerInfo["winner"] = false
-    }
+  if (apiGetScores(roomCode)[roundWinner] >= maxScoreOfRoom[roomCode]) {
+    roundWinnerInfo["winner"] = true
+  } else {
+    roundWinnerInfo["winner"] = false
+  }
 
-    console.log(roundWinnerInfo)
-    return roundWinnerInfo
+  console.log(roundWinnerInfo)
+  return roundWinnerInfo
 }
 
 const apiGetScores = (roomCode) => {
-    listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
-    listOfPlayerScores = {}
+  listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  listOfPlayerScores = {}
 
-    listOfPlayers.map((element) => { listOfPlayerScores[element] = allConnectedPlayers[roomCode][element][SCORE] })
+  listOfPlayers.map((element) => { listOfPlayerScores[element] = allConnectedPlayers[roomCode][element][SCORE] })
 
-    return listOfPlayerScores
+  return listOfPlayerScores
 }
 
 // const apiAssigningAnswerToPromptAsList = (roomCode, answers) => {
@@ -322,30 +329,30 @@ const apiGetScores = (roomCode) => {
 // }
 
 const apiSetPrompt = (roomCode, prompt) => {
-    prompt = cleanUpPrompt(prompt)
-    gamePrompts[roomCode] = prompt
+  prompt = cleanUpPrompt(prompt)
+  gamePrompts[roomCode] = prompt
 
-    underscoreCountOfRoom[roomCode] = 0
+  underscoreCountOfRoom[roomCode] = 0
 
-    for (let i = 0; i < prompt.length; i++) {
-        if (prompt[i] === "_") {
-            underscoreCountOfRoom[roomCode]++
-        }
+  for (let i = 0; i < prompt.length; i++) {
+    if (prompt[i] === "_") {
+      underscoreCountOfRoom[roomCode]++
     }
-    if (underscoreCountOfRoom[roomCode] === 0) {
-        return 1
-    } else {
-        return underscoreCountOfRoom[roomCode]
-    }
+  }
+  if (underscoreCountOfRoom[roomCode] === 0) {
+    return 1
+  } else {
+    return underscoreCountOfRoom[roomCode]
+  }
 }
 
 const cleanUpPrompt = (prompt) => {
-    for (let i = 0; i < prompt.length; i++) {
-        while (prompt[i] === "_" && prompt[i + 1] === "_") {
-            prompt = removeByIndex(prompt, i + 1)
-        }
+  for (let i = 0; i < prompt.length; i++) {
+    while (prompt[i] === "_" && prompt[i + 1] === "_") {
+      prompt = removeByIndex(prompt, i + 1)
     }
-    return prompt
+  }
+  return prompt
 }
 
 // tPrompt = "I like to eat ___________ and __ and __ on the day of __ because my cheeku is very fluffy and ____."
@@ -354,182 +361,223 @@ const cleanUpPrompt = (prompt) => {
 
 // function apiJoinRoom(playerJoining, roomCode) {
 const apiJoinRoom = (playerJoining, roomCode) => {
-    roomCode = roomCode.toUpperCase()
+  roomCode = roomCode.toUpperCase()
 
-    let listOfRoomCodes = Object.keys(allConnectedPlayers)
+  let listOfRoomCodes = Object.keys(allConnectedPlayers)
+
+  if (listOfRoomCodes.includes(roomCode)) {
     let listOfDisconnectedPlayersInRoom = Object.keys(allDisconnectedPlayers[roomCode])
+    let listOfPlayersInRoom = Object.keys(allConnectedPlayers[roomCode])
 
-    if (listOfRoomCodes.includes(roomCode)) {
-        let listOfPlayersInRoom = Object.keys(allConnectedPlayers[roomCode])
+    //capitalize all names in listOfPlayersInRoom
+    listOfPlayersInRoom = listOfPlayersInRoom.map(element => {
+      return element.toUpperCase()
+    });
 
-        //capitalize all names in listOfPlayersInRoom
-        listOfPlayersInRoom = listOfPlayersInRoom.map(element => {
-            return element.toUpperCase()
-        });
+    //capitalize all names in listOfDisconnectedPlayersInRoom
+    listOfDisconnectedPlayersInRoom = listOfDisconnectedPlayersInRoom.map(element => {
+      return element.toUpperCase()
+    });
 
-        //capitalize all names in listOfDisconnectedPlayersInRoom
-        listOfDisconnectedPlayersInRoom = listOfDisconnectedPlayersInRoom.map(element => {
-            return element.toUpperCase()
-        });
+    if (playerJoining !== "") {
+      let firstPersonInRoom = Object.keys(allConnectedPlayers[roomCode])
+      firstPersonInRoom = firstPersonInRoom[0]
+      if (allConnectedPlayers[roomCode][firstPersonInRoom][ROLE] === "") {
+        //checks if disconnected player is rejoining
+        if (listOfDisconnectedPlayersInRoom.includes(playerJoining.toUpperCase())) {
+          allConnectedPlayers[roomCode][playerJoining] = allDisconnectedPlayers[roomCode][playerJoining]
 
-        if (playerJoining !== "") {
-            //checks if disconnected player is rejoining
-            if (listOfDisconnectedPlayersInRoom.includes(playerJoining.toUpperCase())) {
-                allConnectedPlayers[roomCode][playerJoining] = allDisconnectedPlayers[roomCode][playerJoining]
+          if (allConnectedPlayers[roomCode][playerJoining][ROLE] === "chooser") {
+            listOfPlayersInRoom = Object.keys(allConnectedPlayers[roomCode])
 
-                if (allConnectedPlayers[roomCode][playerJoining][ROLE] === "chooser") {
-                    listOfPlayersInRoom = Object.keys(allConnectedPlayers[roomCode])
+            //get's the current choosers index
+            chooserIndexOfRoom[roomCode] = listOfPlayersInRoom.indexOf(playerJoining)
 
-                    //get's the current choosers index
-                    chooserIndexOfRoom[roomCode] = listOfPlayersInRoom.indexOf(playerJoining)
-
-                    //chooses next person in line to be chooser and makes sure chooserIndex does not go out of bounds
-                    if (chooserIndexOfRoom[roomCode] < listOfPlayers.length - 1) {
-                        chooserIndexOfRoom[roomCode]++
-                    } else {
-                        chooserIndexOfRoom[roomCode] = 0
-                    }
-
-                    //prevents the person joining from staying as chooser and lets the next person in line become chooser
-                    roleAssigner(roomCode)
-                }
-
-                return Object.keys(allConnectedPlayers[roomCode])
+            //chooses next person in line to be chooser and makes sure chooserIndex does not go out of bounds
+            if (chooserIndexOfRoom[roomCode] < listOfPlayers.length - 1) {
+              chooserIndexOfRoom[roomCode]++
             } else {
-                if (!listOfPlayersInRoom.includes(playerJoining.toUpperCase)) {
-                    allConnectedPlayers[roomCode][playerJoining] = [[], 0, ""]
-                    return Object.keys(allConnectedPlayers[roomCode])
-                } else {
-                    return "Name Taken"
-                }
+              chooserIndexOfRoom[roomCode] = 0
             }
+
+            //prevents the person joining from staying as chooser and lets the next person in line become chooser
+            roleAssigner(roomCode)
+            rollCycler(roomCode)
+          }
+
+          return Object.keys(allConnectedPlayers[roomCode])
         } else {
-            return "Enter a Valid Name"
+          if (!listOfPlayersInRoom.includes(playerJoining.toUpperCase)) {
+            allConnectedPlayers[roomCode][playerJoining] = [[], 0, ""]
+            return Object.keys(allConnectedPlayers[roomCode])
+          } else {
+            return "Name Taken"
+          }
         }
+      } else {
+        return "The game is still in progress. Wait until the game is finished"
+      }
     } else {
-        return "Room Code Doesn't Exist"
+      return "Enter a Valid Name"
     }
+  } else {
+    return "Room Code Doesn't Exist"
+  }
 }
 
 //TODO MAKE THIS AGAIN BUT GIVEN ROOMCODE AS WELL AND I DONT HAVE TO GENERATE ONE
 //function apiCreateRoom(playerCreating) {
 const apiCreateRoom = (playerCreating) => {
-    let allCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    let roomCode = ""
+  let allCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  let roomCode = ""
+
+  for (let i = 0; i < 4; i++) {
+    let digit = Math.floor(Math.random() * 36)
+    roomCode += allCharacters[digit]
+  }
+  roomCode = roomCode.toUpperCase()
+  let listOfRoomCodes = Object.keys(allConnectedPlayers)
+
+  while (listOfRoomCodes.includes(roomCode)) {
+    roomCode = ""
+    console.log("This room already exists :O")
 
     for (let i = 0; i < 4; i++) {
-        let digit = Math.floor(Math.random() * 36)
-        roomCode += allCharacters[digit]
+      let digit = Math.floor(Math.random() * 36)
+      roomCode += allCharacters[digit]
     }
-    roomCode = roomCode.toUpperCase()
-    let listOfRoomCodes = Object.keys(allConnectedPlayers)
+  }
+  roomCode = roomCode.toUpperCase()
 
-    while (listOfRoomCodes.includes(roomCode)) {
-        roomCode = ""
-        console.log("This room already exists :O")
+  allConnectedPlayers[roomCode] = {}
+  allDisconnectedPlayers[roomCode] = {}
+  gamePrompts[roomCode] = ""
+  chooserIndexOfRoom[roomCode] = 0
+  underscoreCountOfRoom[roomCode] = 0
+  randomizedTypersAnswers[roomCode] = {}
+  roundWinnerOfRoom[roomCode] = ""
+  maxScoreOfRoom[roomCode] = 3 //TODO CHANGE BACK TO 3
 
-        for (let i = 0; i < 4; i++) {
-            let digit = Math.floor(Math.random() * 36)
-            roomCode += allCharacters[digit]
-        }
-    }
-    roomCode = roomCode.toUpperCase()
+  if (playerCreating !== "") {
+    allConnectedPlayers[roomCode][playerCreating] = [[], 0, ""]
+  } else {
+    return "Enter a Valid Name"
+  }
 
-    allConnectedPlayers[roomCode] = {}
-    allDisconnectedPlayers[roomCode] = {}
-    gamePrompts[roomCode] = ""
-    chooserIndexOfRoom[roomCode] = 0
-    underscoreCountOfRoom[roomCode] = 0
-    randomizedTypersAnswers[roomCode] = {}
-    roundWinnerOfRoom[roomCode] = ""
-    maxScoreOfRoom[roomCode] = 3
-
-    if (playerCreating !== "") {
-        allConnectedPlayers[roomCode][playerCreating] = [[], 0, ""]
-    } else {
-        return "Enter a Valid Name"
-    }
-
-    return roomCode
+  return roomCode
 }
 
 const apiLeavingRoom = (playerLeaving, roomCode) => {
-    let listOfRoomCodes = Object.keys(allConnectedPlayers)
-    let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  let listOfRoomCodes = Object.keys(allConnectedPlayers)
+  let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
 
-    listOfPlayers = listOfPlayers.map(element => {
-        return element.toUpperCase()
-    });
+  // if (listOfPlayers.length - 1 === chooserIndexOfRoom[roomCode]) {
+  if (chooserIndexOfRoom[roomCode] !== 0) {
+    chooserIndexOfRoom[roomCode]--
+  }
 
-    if (listOfPlayers.includes(playerLeaving.toUpperCase()) && listOfRoomCodes.includes(roomCode)) {
-        allDisconnectedPlayers[roomCode][playerLeaving] = allConnectedPlayers[roomCode][playerLeaving]
+  listOfPlayers = listOfPlayers.map(element => {
+    return element.toUpperCase()
+  });
 
-        delete allConnectedPlayers[roomCode][playerLeaving]
-        return Object.keys(allConnectedPlayers[roomCode])
-    }
+  if (listOfPlayers.includes(playerLeaving.toUpperCase()) && listOfRoomCodes.includes(roomCode)) {
+    allDisconnectedPlayers[roomCode][playerLeaving] = allConnectedPlayers[roomCode][playerLeaving]
+
+    delete allConnectedPlayers[roomCode][playerLeaving]
+    return Object.keys(allConnectedPlayers[roomCode])
+  }
 }
 
 const apiRemoveRoom = (roomCode) => {
-    let listOfRoomCodes = Object.keys(allConnectedPlayers)
+  let listOfRoomCodes = Object.keys(allConnectedPlayers)
 
-    roomCode = roomCode.toUpperCase()
+  roomCode = roomCode.toUpperCase()
 
-    if (listOfRoomCodes.includes(roomCode)) {
-        delete allConnectedPlayers[roomCode]
-    }
+  if (listOfRoomCodes.includes(roomCode)) {
+    delete allConnectedPlayers[roomCode]
+    console.log("Rooms: " + allConnectedPlayers)
+  }
 }
 
 const apiStartGame = (roomCode) => {
-    let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
 
-    //to reset everyone's score to 0
-    listOfPlayers.map((element) => {
-        allConnectedPlayers[roomCode][element][SCORE] = 0
-    })
+  //to reset everyone's score to 0
+  listOfPlayers.map((element) => {
+    allConnectedPlayers[roomCode][element][SCORE] = 0
+  })
 
-    if (listOfPlayers.length < 3) {
-        return "You Need At Least 3 Players To Start The Game"
-    } else {
-        //checking first players role to see if blank (cuz everyone elses would be blank too)
-        if (allConnectedPlayers[roomCode][listOfPlayers[0]][ROLE] === "") {
-            roleAssigner(roomCode)
-        }
-        return apiGetPlayersAndRoles(roomCode)
+  if (listOfPlayers.length < 3) {
+    return "You Need At Least 3 Players To Start The Game"
+  } else {
+    //checking first players role to see if blank (cuz everyone elses would be blank too)
+    if (allConnectedPlayers[roomCode][listOfPlayers[0]][ROLE] === "") {
+      roleAssigner(roomCode)
+      rollCycler(roomCode)
     }
+    return apiGetPlayersAndRoles(roomCode)
+  }
 }
 
+//to reset roles to "" upon going back to lobby
+const apiReturnToLobby = (roomCode) => {
+  let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  
+  listOfPlayers.map((element) => {
+    allConnectedPlayers[roomCode][element][ANSWERS] = []
+    allConnectedPlayers[roomCode][element][ROLE] = ""
+  })
+
+  return apiGetPlayersAndRoles(roomCode)
+}
+
+// const apiNextGame = (roomCode) => {
+//   let listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+
+//   listOfPlayers.map((element) => {
+//     allConnectedPlayers[roomCode][element][ANSWERS] = []
+//   })
+
+//   roleAssigner(roomCode)
+
+//   return apiGetPlayersAndRoles(roomCode)
+// }
+
 const apiNextRound = (roomCode) => {
-    listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
 
-    listOfPlayers.map((element) => {
-        allConnectedPlayers[roomCode][element][ANSWERS] = []
-    })
+  listOfPlayers.map((element) => {
+    allConnectedPlayers[roomCode][element][ANSWERS] = []
+  })
 
-    roleAssigner(roomCode)
-    return apiGetPlayersAndRoles(roomCode)
+  roleAssigner(roomCode)
+  rollCycler(roomCode)
+
+  return apiGetPlayersAndRoles(roomCode)
 }
 
 module.exports = {
-    apiGetRandomPrompt,
-    apiJoinRoom,
-    apiCreateRoom,
-    apiGetChooser,
-    apiGetTypers,
-    apiGetPlayersAndRoles,
-    apiLeavingRoom,
-    apiRemoveRoom,
-    apiStartGame,
-    apiSetPrompt,
-    apiGetPrompt,
-    apiAssigningAnswerToPrompt,
-    apiSetPlayerAnswer,
-    apiGetRandomizedPlayerAnswers,
-    apiSetRoundWinner,
-    apiGetRoundWinner,
-    apiGetScores,
-    apiNextRound,
-    apiSetMaxScore,
-    apiGetMaxScore
+  apiGetRandomPrompt,
+  apiJoinRoom,
+  apiCreateRoom,
+  apiGetChooser,
+  apiGetTypers,
+  apiGetPlayersAndRoles,
+  apiLeavingRoom,
+  apiRemoveRoom,
+  apiStartGame,
+  apiSetPrompt,
+  apiGetPrompt,
+  apiAssigningAnswerToPrompt,
+  apiSetPlayerAnswer,
+  apiGetRandomizedPlayerAnswers,
+  apiSetRoundWinner,
+  apiGetRoundWinner,
+  apiGetScores,
+  apiNextRound,
+  apiSetMaxScore,
+  apiGetMaxScore,
+  apiReturnToLobby,
 }
 
 //
@@ -621,10 +669,10 @@ module.exports = {
 // }
 
 function promptListMaker() {
-    //TODO RELOCATE TEXT FILE OF PROMPTS
-    let _listOfPrompts = fs.readFileSync(__dirname + '/listOfPrompts.txt', 'utf8')
-    listOfPrompts = _listOfPrompts.split("\n")
-    // console.log(listOfPrompts)
+  //TODO RELOCATE TEXT FILE OF PROMPTS
+  let _listOfPrompts = fs.readFileSync(__dirname + '/listOfPrompts.txt', 'utf8')
+  listOfPrompts = _listOfPrompts.split("\n")
+  // console.log(listOfPrompts)
 }
 
 // // function getPrompt() {
@@ -691,32 +739,36 @@ function promptListMaker() {
 //     }
 
 function removeByIndex(str, index) {
-    return str.slice(0, index) + str.slice(index + 1);
+  return str.slice(0, index) + str.slice(index + 1);
 }
 
 function roleAssigner(roomCode) {
-    listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
-    let toBeChosen = ""
-    let thereIsAChooser = false
+  listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  let toBeChosen = ""
+  // let thereIsAChooser = false
 
-    for (let i = 0; i < listOfPlayers.length; i++) {
-        allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] = "typer"
-    }
+  for (let i = 0; i < listOfPlayers.length; i++) {
+    allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] = "typer"
+  }
 
-    toBeChosen = listOfPlayers[chooserIndexOfRoom[roomCode]]
-    allConnectedPlayers[roomCode][toBeChosen][ROLE] = "chooser"
+  toBeChosen = listOfPlayers[chooserIndexOfRoom[roomCode]]
+  // console.log("ZZZZZ roleAssigner()", allConnectedPlayers[roomCode])
+  // console.log("ZZZZZ roleAssigner()", toBeChosen)
+  allConnectedPlayers[roomCode][toBeChosen][ROLE] = "chooser"
 
-    for (let i = 0; i < listOfPlayers.length; i++) {
-        if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] !== "chooser") {
-            allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] = "typer"
-        }
-    }
+  // for (let i = 0; i < listOfPlayers.length; i++) {
+  //   if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] !== "chooser") {
+  //     allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] = "typer"
+  //   }
+  // }
+}
 
-    if (chooserIndexOfRoom[roomCode] < listOfPlayers.length - 1) {
-        chooserIndexOfRoom[roomCode]++
-    } else {
-        chooserIndexOfRoom[roomCode] = 0
-    }
+const rollCycler = (roomCode) => {
+  if (chooserIndexOfRoom[roomCode] < listOfPlayers.length - 1) {
+    chooserIndexOfRoom[roomCode]++
+  } else {
+    chooserIndexOfRoom[roomCode] = 0
+  }
 }
 
 //     for (let i = 0; i < listOfPlayers.length; i++) {
@@ -796,15 +848,15 @@ function roleAssigner(roomCode) {
 
 
 function shuffle(arr) {
-    var rand, temp, i;
+  var rand, temp, i;
 
-    for (i = arr.length - 1; i > 0; i -= 1) {
-        rand = Math.floor((i + 1) * Math.random());//get random between zero and i (inclusive)
-        temp = arr[rand];//swap i and the zero-indexed number
-        arr[rand] = arr[i];
-        arr[i] = temp;
-    }
-    return arr;
+  for (i = arr.length - 1; i > 0; i -= 1) {
+    rand = Math.floor((i + 1) * Math.random());//get random between zero and i (inclusive)
+    temp = arr[rand];//swap i and the zero-indexed number
+    arr[rand] = arr[i];
+    arr[i] = temp;
+  }
+  return arr;
 }
 
 // //arguments given by frontend

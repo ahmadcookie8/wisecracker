@@ -15,7 +15,7 @@ import '../../App.css';
 function MainPage(props) {
   const [response, setResponse] = useState("");
   const [state, setState] = useState({ playerName: "", roomCode: "", players: [], goToLobby: "" })
-  console.log("ZZZZ", props.appState)
+  // console.log("ZZZZ", props.appState)
   const [socket, setSocket] = useState(props.appState.socket)
 
   useEffect(() => {
@@ -38,6 +38,7 @@ function MainPage(props) {
       if (roomCode.length !== 4) { //i.e. roomCode is not a valid roomCode thus it's an error
         const errorMessage = roomCode
         console.log(errorMessage)
+        window.alert(errorMessage)
       } else {
 
         const newRoomCode = roomCode.toUpperCase()
@@ -56,6 +57,7 @@ function MainPage(props) {
         const errorMessage = players
         //TODO: display errorMessage on screen
         console.log(errorMessage)
+        window.alert(errorMessage)
       } else { //we're gucci
         // state.players = players
         const newPlayers = players

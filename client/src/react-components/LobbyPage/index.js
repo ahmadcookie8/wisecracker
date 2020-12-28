@@ -60,17 +60,22 @@ function LobbyPage(props) {
         console.log("Game is now starting as role " + role)
         setState(prevState => ({ ...prevState, startGame: role })) //this triggers a redirect to the lobby page
 
+        console.log("ZZZZZ LobbyPage#gameStarted: ", state.roomCode)
         socket.emit("getNewPrompt") //request prompt so we can get it after the redirect we triggered above
         socket.emit("getChooser", state.roomCode) //request chooser so we can get it after the redirect we triggered above
         socket.emit("getTypers", state.roomCode) //request typers so we can get it after the redirect we triggered above
       }
     });
 
+    socket.on("triggerReturnToLobbyFromDisconnectingHost", () => {
+      setState(prevState => ({ ...prevState, goToLobby: "host" }))
+    });
+
 
     // CLEAN UP THE EFFECT
     // return () => socket.disconnect();
 
-  }, []);
+  });
 
   function handleChange(event) {
     const target = event.target;
@@ -82,7 +87,7 @@ function LobbyPage(props) {
   }
 
   function displayStartGameButton(isHost) {
-    if (isHost) {
+    if (isHost === "host") {
       return (
         <div>
           <button className="button1" onClick={() => { socket.emit("startGame", state.roomCode) }}>Start Game</button>
@@ -145,7 +150,8 @@ function LobbyPage(props) {
         {/* <h1 className="title title-colour-1">Lobby</h1> */}
         <h2 className="room-code title-colour-1">Room Code: {state.roomCode}</h2>
         {displayPlayerNames()}
-        {displayStartGameButton(useLocation().host)}
+        {displayStartGameButton(state.goToLobby)}
+        {/* useLocation().host)} */}
         {console.log(state)}
 
         {redirectToRoundPlaying()}
