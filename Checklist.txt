@@ -44,3 +44,5 @@ whilst it updates for everyone else who's joined
 - allow host ot choose max score to win in lobby
 
 - delete room when lobby is empty
+
+- alert all needed console.logs

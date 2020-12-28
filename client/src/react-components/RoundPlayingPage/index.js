@@ -321,7 +321,7 @@ function RoundPlayingPage(props) {
               socket.emit("answerRevealed", {roomCode: state.roomCode, numAnswersRevealed: state.numAnswersRevealed+1});
               setState(prevState => ({ ...prevState, numAnswersRevealed: state.numAnswersRevealed+1 }));
             }}>{buttonText}
-          </button> : <p className="white-text">{buttonText}</p>
+          </button> : (role === "chooser" && <p className="white-text">{buttonText}</p>)
           }
         </div>
       )
