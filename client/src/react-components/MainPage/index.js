@@ -151,7 +151,8 @@ function MainPage(props) {
   }
 
   return (
-    <div id="background" className="background-colour-1">
+    // <div id="background" className="background-colour-1">
+    <div id="background">
       <div className="page">
         <h1 className="title title-colour-1">Wise Cracker</h1>
 
