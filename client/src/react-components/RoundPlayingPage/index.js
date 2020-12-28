@@ -193,7 +193,7 @@ function RoundPlayingPage(props) {
       const oldHost = hosts.oldHost
       const newHost = hosts.newHost
       console.log("Host " + oldHost + " left so everyone is returning to lobby with " + newHost + " as the new host.")
-      window.alerts("Host " + oldHost + " left so everyone is returning to lobby with " + newHost + " as the new host.")
+      window.alert("Host " + oldHost + " left so everyone is returning to lobby with " + newHost + " as the new host.")
     });
     
     
@@ -316,12 +316,13 @@ function RoundPlayingPage(props) {
               ) //can only click if chooser and all the answers have been revealed
             }
           })}
-          {role === "chooser" && //the && acts like a ternary ? : but without the : part
+          {role === "chooser" && buttonText === "Reveal An Answer" ? //the && acts like a ternary ? : but without the : part
           <button className="button1" onClick={() => {
               socket.emit("answerRevealed", {roomCode: state.roomCode, numAnswersRevealed: state.numAnswersRevealed+1});
               setState(prevState => ({ ...prevState, numAnswersRevealed: state.numAnswersRevealed+1 }));
             }}>{buttonText}
-          </button>}
+          </button> : <p className="white-text">{buttonText}</p>
+          }
         </div>
       )
 

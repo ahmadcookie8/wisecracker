@@ -40,3 +40,7 @@ whilst it updates for everyone else who's joined
 - in prompt choosing, make instructions clearer (say they can generate new prompt or write their own)
 
 - make the room deleting happen when a lobby is empty, not when a host leaves
+
+- allow host ot choose max score to win in lobby
+
+- delete room when lobby is empty
