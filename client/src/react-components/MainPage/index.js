@@ -14,7 +14,7 @@ import '../../App.css';
 
 function MainPage(props) {
   const [response, setResponse] = useState("");
-  const [state, setState] = useState({ playerName: "", roomCode: "", players: [], goToLobby: "" })
+  const [state, setState] = useState({ playerName: "", roomCode: "", players: [], goToLobby: "", maxScore: "3" })
   // console.log("ZZZZ", props.appState)
   const [socket, setSocket] = useState(props.appState.socket)
 

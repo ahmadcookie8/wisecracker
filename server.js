@@ -147,7 +147,11 @@ io.on('connection', function (socket) {
   })
 
 
-  socket.on("startGame", function (roomCode) {
+  socket.on("startGame", function (state) {
+    const roomCode = state.roomCode
+    const maxScore = state.maxScore
+    console.log("ZZZZZ startGame maxScore:", maxScore)
+    apiSetMaxScore(roomCode, maxScore)
     console.log("Game has started for room " + roomCode)
     const playersAndRoles = apiStartGame(roomCode)
     console.log(playersAndRoles)
@@ -274,13 +278,18 @@ io.on('connection', function (socket) {
           console.log("playersRemaining: ", playersRemaining)//TODO DELETE THIS
           io.to(room).emit("roomLeft", playersRemaining) //let others in room know they left
 
-          if (isHost) { //if player leaving was a host, decimate the room and kick everyone out
-            //handles lobby logic
+
+          const players = Object.keys(serverInfo[room])
+          if (players.length === 0) { //if no one left in the room, remove it
+            apiRemoveRoom(room) //let game know the room should be removed
+            delete serverInfo[room] //delete room from serverInfo
+          } else if (isHost) { //if player leaving was a host, decimate the room and kick everyone out
+            //handles old lobby logic
             // apiRemoveRoom(room) //let game know the room should be removed
             // io.to(room).emit("removeRoom") //let everyone in room know the room is being removed
             // delete serverInfo[room] //delete room from serverInfo
 
-            //handles roundPlaying logic
+            //handles roundPlaying logic and lobby logic
             //return to lobby and change hostmanship to next person from serverInfo
             const players = Object.keys(serverInfo[room])
             return players.every((player) => {
