@@ -229,7 +229,7 @@ function RoundPlayingPage(props) {
       if (role === "chooser") {
         return (
           <div>
-            <h6 style={{ color: "var(--text-colour-1)" }}>Prompt:</h6>
+            <h6 style={{ color: "var(--text-colour-1)" }}>Prompt (Generate one or create one yourself):</h6>
             <textarea className="choosing-prompt" value={state.prompt} name="prompt" onChange={handleChange} />
             <div><button className="button1" onClick={() => { socket.emit("getNewPrompt") }}>Get New Prompt</button></div>
             <div><button className="button1" onClick={() => { socket.emit("setPrompt", state); socket.emit("getPrompt", state.roomCode) }}>Use This Prompt</button></div>

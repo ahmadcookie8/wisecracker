@@ -159,3 +159,12 @@
   font-size: 20px;
   color: white;
 }
+
+.max-score-input {
+  display: inline-block;
+  font-size: x-large;
+  font-family: Roboto;
+  background-color:  var(--text-colour-1);
+  color:  var(--text-colour-4);
+  width: 100px;
+}
