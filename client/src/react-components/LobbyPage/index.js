@@ -61,7 +61,7 @@ function LobbyPage(props) {
         console.log("Game is now starting as role " + role)
         setState(prevState => ({ ...prevState, startGame: role })) //this triggers a redirect to the lobby page
 
-        console.log("ZZZZZ LobbyPage#gameStarted: ", state.roomCode)
+        // console.log("ZZZZZ LobbyPage#gameStarted: ", state.roomCode)
         socket.emit("getNewPrompt") //request prompt so we can get it after the redirect we triggered above
         socket.emit("getChooser", state.roomCode) //request chooser so we can get it after the redirect we triggered above
         socket.emit("getTypers", state.roomCode) //request typers so we can get it after the redirect we triggered above
@@ -83,17 +83,18 @@ function LobbyPage(props) {
     const value = target.value;
     const name = target.name;
 
-
+    console.log("ZZZZZ name:", name, "value:", value)
     setState(prevState => ({ ...prevState, [name]: value }))
   }
 
   function displayStartGameButton(isHost) {
+    console.log("ZZZZZ displayStartGameButton:", state.maxScore)
     if (isHost === "host") {
       return (
         <div>
-          <button className="button1" onClick={() => { socket.emit("startGame", state.roomCode) }}>Start Game</button>
+          <button className="button1" onClick={() => { socket.emit("startGame", { roomCode: state.roomCode, maxScore: state.maxScore }) }}>Start Game</button>
         </div>
-      )
+      ) 
     }
   }
 
@@ -145,6 +146,15 @@ function LobbyPage(props) {
     }
   }
 
+  function displayMaxScoreChanger(isHost) {
+    if (isHost === "host") {
+      return (<div>
+        <p style={{ color: "white", "font-size": "18px" }}>Max Score Needed To Win:</p>
+        <input type="number" min="1" max="50" className="max-score-input" name="maxScore" value={state.maxScore} onChange={handleChange} />
+      </div>)
+    }
+  }
+
   return (
     <div id="background" className="background-colour-1">
       <div className="page">
@@ -152,6 +162,7 @@ function LobbyPage(props) {
         <h2 className="room-code title-colour-1">Room Code: {state.roomCode}</h2>
         {displayPlayerNames()}
         {displayStartGameButton(state.goToLobby)}
+        {displayMaxScoreChanger(state.goToLobby)}
         {/* useLocation().host)} */}
         {console.log(state)}
 
