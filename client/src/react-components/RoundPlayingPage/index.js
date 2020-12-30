@@ -261,7 +261,7 @@ function RoundPlayingPage(props) {
           <div>
             {state.typers.includes(state.playerName) ? //only display the answering UI if playerName is still answering
             <div>
-              <h3 style={{ color: "var(--text-colour-1)" }}>Prompt:</h3>
+              <h3 style={{ color: "var(--text-colour-1)" }}>{state.chooser + "'s "}prompt:</h3>
               <p name="prompt" className="prompt">{state.prompt}</p>
               {displayAnswerInputs()}
             </div>
