@@ -40,12 +40,12 @@ function MainPage(props) {
         console.log(errorMessage)
         window.alert(errorMessage)
       } else {
+        props.setAppState(prevAppState => ({ ...prevAppState, loggedIn: true }))
 
         const newRoomCode = roomCode.toUpperCase()
         setState(prevState => ({ ...prevState, roomCode: newRoomCode }))
         setState(prevState => ({ ...prevState, goToLobby: "host" })) //this triggers a redirect to the lobby page
 
-        props.setAppState(prevAppState => ({ ...prevAppState, loggedIn: true }))
       }
 
 
@@ -59,12 +59,12 @@ function MainPage(props) {
         console.log(errorMessage)
         window.alert(errorMessage)
       } else { //we're gucci
+        props.setAppState(prevAppState => ({ ...prevAppState, loggedIn: true }))
         // state.players = players
         const newPlayers = players
         setState(prevState => ({ ...prevState, players: newPlayers }))
         setState(prevState => ({ ...prevState, goToLobby: "nonHost" })) //this triggers a redirect to the lobby page
 
-        props.setAppState(prevAppState => ({ ...prevAppState, loggedIn: true }))
       }
 
     });

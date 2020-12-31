@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import socketIOClient from "socket.io-client";
 
 
-import { Route, Switch, BrowserRouter } from 'react-router-dom';
+import { Route, Switch, BrowserRouter, Redirect } from 'react-router-dom';
 // import { uid } from 'react-uid';
 import './App.css';
 
@@ -13,8 +13,8 @@ import LobbyPage from "./react-components/LobbyPage"
 import RoundPlayingPage from "./react-components/RoundPlayingPage"
 
 
-const ENDPOINT = "https://thawing-ocean-59152.herokuapp.com/" 
-// const ENDPOINT = "http://localhost:5000";
+// const ENDPOINT = "https://thawing-ocean-59152.herokuapp.com/" 
+const ENDPOINT = "http://localhost:5000";
 
 
 function App() {
@@ -43,10 +43,17 @@ function App() {
           <Route exact path="/" render={() => <MainPage appState={state} setAppState={setAppState} />} />
           <Route path="/lobby" render={() => {
             console.log(state);
-            if (state.loggedIn) { return <LobbyPage appState={state} setAppState={setAppState} /> } else { return <MainPage appState={state} setAppState={setAppState} /> }
+            // if (state.loggedIn) { return <LobbyPage appState={state} setAppState={setAppState} /> } else { return <MainPage appState={state} setAppState={setAppState} /> }
+
+            if (state.loggedIn) { return <LobbyPage appState={state} setAppState={setAppState} /> } else { return <Redirect to="/" /> }
             // return <LobbyPage appState={state} />
           }} />
-          <Route path="/roundPlaying" render={() => <RoundPlayingPage appState={state} setAppState={setAppState} />} />
+
+          <Route path="/roundPlaying" render={() => {
+            console.log(state);
+            if (state.loggedIn) { return <RoundPlayingPage appState={state} setAppState={setAppState} /> } else { return <Redirect to="/" /> }
+          }} />
+          {/* <Route path="/roundPlaying" render={() => <RoundPlayingPage appState={state} setAppState={setAppState} />} /> */}
 
           {/* 404 if URL isn't expected */}
           <Route render={() => <div>404: Bro where even are you???</div>} />
