@@ -13,10 +13,11 @@ import '../../App.css';
 
 function LobbyPage(props) {
   const [state, setState] = useState(useLocation().state)//({ playerName: "", roomCode: "", players: [] })
-  const [socket] = useState(props.appState.socket)
+  const socket = props.appState.socket
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    if (!socket) return; // Guard against null socket
+
     socket.on("message", data => {
       // setResponse(data);
       console.log(data)
@@ -76,7 +77,7 @@ function LobbyPage(props) {
     // CLEAN UP THE EFFECT
     // return () => socket.disconnect();
 
-  });
+  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleChange(event) {
     const target = event.target;

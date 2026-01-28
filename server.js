@@ -69,6 +69,7 @@ server.listen(port, function () {
 });
 
 const serverInfo = {}
+const disconnectionTimers = {} // Track pending disconnections with grace period
 
 // Add the WebSocket handlers
 io.on('connection', function (socket) {
@@ -269,75 +270,92 @@ io.on('connection', function (socket) {
   });
 
 
-  socket.on("disconnect", function (state) {
+  socket.on("reconnect_player", function (state) {
+    const { playerName, roomCode } = state;
+    console.log(`Player ${playerName} attempting to reconnect to room ${roomCode}`);
+
+    // Check if there's a pending disconnection for this player
+    const timerKey = `${roomCode}-${playerName}`;
+    if (disconnectionTimers[timerKey]) {
+      clearTimeout(disconnectionTimers[timerKey]);
+      delete disconnectionTimers[timerKey];
+      console.log(`Reconnection successful for ${playerName} in ${roomCode}`);
+
+      // Update socket ID and rejoin room
+      if (serverInfo[roomCode] && serverInfo[roomCode][playerName]) {
+        serverInfo[roomCode][playerName].socketId = socket.id;
+        socket.join(roomCode);
+        socket.emit("reconnection_success", { playerName, roomCode });
+      }
+    }
+  });
+
+  socket.on("disconnect", function () {
     const rooms = Object.keys(serverInfo) //get all rooms from serverInfo
     console.log("server disconnect()")
 
-    rooms.every(room => { //go through all rooms //every is like map, but if something falsey is returned, it breaks out
+    rooms.every(room => { //go through all rooms
       const players = Object.keys(serverInfo[room])
-      return players.every((playerName, index) => {//go through all players //return b/c may need to break out if false
-        const socketId = serverInfo[room][playerName].socketId //get socketId from serverInfo
+      return players.every((playerName) => {//go through all players
+        const socketId = serverInfo[room][playerName].socketId
         if (socketId === socket.id) { //if this socketId matches the socket.id of the person disconnecting
           const isHost = serverInfo[room][playerName].host
 
-          delete serverInfo[room][playerName] //remove this player from it's room in serverInfo
-          console.log("playerName: ", playerName, "room: ", room)//TODO DELETE THIS
-          const playersRemaining = apiLeavingRoom(playerName, room) // let game know that they left
-          console.log("playersRemaining: ", playersRemaining)//TODO DELETE THIS
-          io.to(room).emit("roomLeft", playersRemaining) //let others in room know they left
+          // Instead of immediately kicking, set a 300-second grace period
+          const timerKey = `${room}-${playerName}`;
+          console.log(`Player ${playerName} disconnected from ${room}, starting 300s grace period`);
 
+          disconnectionTimers[timerKey] = setTimeout(() => {
+            console.log(`Grace period expired for ${playerName} in ${room}, kicking...`);
+            delete disconnectionTimers[timerKey];
 
-          const players = Object.keys(serverInfo[room])
-          if (players.length === 0) { //if no one left in the room, remove it
-            apiRemoveRoom(room) //let game know the room should be removed
-            delete serverInfo[room] //delete room from serverInfo
-          } else if (isHost) { //if player leaving was a host, decimate the room and kick everyone out
-            //handles old lobby logic
-            // apiRemoveRoom(room) //let game know the room should be removed
-            // io.to(room).emit("removeRoom") //let everyone in room know the room is being removed
-            // delete serverInfo[room] //delete room from serverInfo
+            // Original kick logic
+            if (serverInfo[room] && serverInfo[room][playerName]) {
+              delete serverInfo[room][playerName];
+              const playersRemaining = apiLeavingRoom(playerName, room);
+              io.to(room).emit("roomLeft", playersRemaining);
 
-            //handles roundPlaying logic and lobby logic
-            //return to lobby and change hostmanship to next person from serverInfo
-            const players = Object.keys(serverInfo[room])
-            return players.every((player) => {
-              if (!serverInfo[room][player].host) { //this is the first player that isn't a host
-                serverInfo[room][player].host = true //set to host in serverInfo
-                const hostToBeSocketId = serverInfo[room][player].socketId
-                io.to(hostToBeSocketId).emit("triggerReturnToLobbyFromDisconnectingHost")  //let host-to-be know to return to lobby since someone left and to set itself to host
-                io.to(room).emit("triggerReturnToLobbyFromDisconnectingHostAlert", { oldHost: playerName, newHost: player })//trigger an alert for everyone in the room
-                return false
+              const players = Object.keys(serverInfo[room])
+              if (players.length === 0) {
+                apiRemoveRoom(room);
+                delete serverInfo[room];
+              } else if (isHost) {
+                const players = Object.keys(serverInfo[room])
+                return players.every((player) => {
+                  if (!serverInfo[room][player].host) {
+                    serverInfo[room][player].host = true;
+                    const hostToBeSocketId = serverInfo[room][player].socketId;
+                    io.to(hostToBeSocketId).emit("triggerReturnToLobbyFromDisconnectingHost");
+                    io.to(room).emit("triggerReturnToLobbyFromDisconnectingHostAlert", { oldHost: playerName, newHost: player });
+                    return false;
+                  }
+                });
+              } else {
+                const players = Object.keys(serverInfo[room])
+                if (players.length >= 3) {
+                  players.map((player) => {
+                    if (serverInfo[room][player].host) {
+                      const hostSocketId = serverInfo[room][player].socketId;
+                      io.to(hostSocketId).emit("triggerNewRoundFromDisconnection");
+                      io.to(room).emit("triggerNewRoundFromDisconnectionAlert", playerName);
+                    }
+                  });
+                } else {
+                  players.map((player) => {
+                    if (serverInfo[room][player].host) {
+                      const hostSocketId = serverInfo[room][player].socketId;
+                      io.to(hostSocketId).emit("triggerReturnToLobbyFromDisconnection");
+                      io.to(room).emit("triggerReturnToLobbyFromDisconnectionAlert", playerName);
+                    }
+                  });
+                }
               }
-            })
-
-          } else { //person that disconnected is not a host
-            //go to new round and alert everyone
-            //handles roundPlaying logic
-            const players = Object.keys(serverInfo[room])
-
-            if (players.length >= 3) { //if still 3 people in the room, continue game
-              players.map((player) => {
-                if (serverInfo[room][player].host) { //if player is host
-                  const hostSocketId = serverInfo[room][player].socketId
-                  io.to(hostSocketId).emit("triggerNewRoundFromDisconnection")  //let host know to trigger a new round since someone left
-                  io.to(room).emit("triggerNewRoundFromDisconnectionAlert", playerName)//trigger an alert for everyone in the room
-                }
-              })
-            } else { //if theres less than 3 people in the room, kick to lobby
-              players.map((player) => {
-                if (serverInfo[room][player].host) { //if player is host
-                  const hostSocketId = serverInfo[room][player].socketId
-                  io.to(hostSocketId).emit("triggerReturnToLobbyFromDisconnection")  //let host know to trigger a return to lobby since < 3 players left now
-                  io.to(room).emit("triggerReturnToLobbyFromDisconnectionAlert", playerName)//trigger an alert for everyone in the room
-                }
-              })
             }
+          }, 300000); // 300 second grace period
 
-          }
-
-          return false //breaks out of every call
+          return false;
         }
-        return true //keep going through every call
+        return true;
       })
     })
     console.log(serverInfo)

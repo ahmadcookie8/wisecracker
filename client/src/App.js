@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import socketIOClient from "socket.io-client";
 
 
@@ -17,13 +17,49 @@ const ENDPOINT = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 
 
 function App() {
-  const [state, setState] = useState({ loggedIn: false, socket: null }) //socket is created here and assigned to socket
+  const [state, setState] = useState({ loggedIn: false, socket: null })
+  const [serverConnected, setServerConnected] = useState(false)
 
-  function initializeSocket() {
-    if (state.socket === null) { //only create socket if it hasn't been created yet
-      setState(prevState => ({ ...prevState, socket: socketIOClient(ENDPOINT) }))
-    }
-  }
+  useEffect(() => {
+    const socket = socketIOClient(ENDPOINT, {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: Infinity
+    });
+
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      setServerConnected(true);
+
+      // Try to restore session if we were previously logged in
+      const savedPlayerName = sessionStorage.getItem('playerName');
+      const savedRoomCode = sessionStorage.getItem('roomCode');
+
+      if (savedPlayerName && savedRoomCode) {
+        console.log('Attempting to reconnect player session...');
+        socket.emit('reconnect_player', { playerName: savedPlayerName, roomCode: savedRoomCode });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Disconnected from server');
+      setServerConnected(false);
+    });
+
+    socket.on('connect_error', () => {
+      console.log('Connection error - server may be starting...');
+    });
+
+    socket.on('reconnection_success', (data) => {
+      console.log('Reconnection successful:', data);
+    });
+
+    setState(prevState => ({ ...prevState, socket: socket }));
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
 
 
@@ -35,7 +71,43 @@ function App() {
 
   return (
     <div>
-      {initializeSocket()}
+      {!serverConnected && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            fontSize: '24px',
+            color: 'white',
+            marginBottom: '20px'
+          }}>
+            The server is starting...
+          </div>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '5px solid rgba(255, 255, 255, 0.3)',
+            borderTop: '5px solid white',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      )}
       <BrowserRouter>
         <Switch>
           {/* routes */}

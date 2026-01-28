@@ -13,9 +13,11 @@ import '../../App.css';
 
 function MainPage(props) {
   const [state, setState] = useState({ playerName: "", roomCode: "", players: [], goToLobby: "", maxScore: "3" })
-  const [socket] = useState(props.appState.socket)
+  const socket = props.appState.socket
 
   useEffect(() => {
+    if (!socket) return; // Guard against null socket
+
     socket.on("message", data => {
       // setResponse(data);
       console.log(data)
@@ -43,6 +45,9 @@ function MainPage(props) {
         setState(prevState => ({ ...prevState, roomCode: newRoomCode }))
         setState(prevState => ({ ...prevState, goToLobby: "host" })) //this triggers a redirect to the lobby page
 
+        // Save session for reconnection
+        sessionStorage.setItem('playerName', state.playerName);
+        sessionStorage.setItem('roomCode', newRoomCode);
       }
 
 
@@ -62,6 +67,9 @@ function MainPage(props) {
         setState(prevState => ({ ...prevState, players: newPlayers }))
         setState(prevState => ({ ...prevState, goToLobby: "nonHost" })) //this triggers a redirect to the lobby page
 
+        // Save session for reconnection
+        sessionStorage.setItem('playerName', state.playerName);
+        sessionStorage.setItem('roomCode', state.roomCode.toUpperCase());
       }
 
     });
@@ -69,7 +77,7 @@ function MainPage(props) {
     // CLEAN UP THE EFFECT
     // return () => socket.disconnect();
 
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // state = {
   //   gabagoo: false,
