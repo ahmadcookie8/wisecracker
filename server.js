@@ -274,10 +274,18 @@ io.on('connection', function (socket) {
   });
 
   socket.on("returnToLobby", roomCode => {
-    // const playersAndRoles = apiNextRound(roomCode) //e.g.{"joey": "typer", "henry": "chooser", "josh": ""}
     const playersAndRoles = apiReturnToLobby(roomCode)
-    apiReturnToLobby(roomCode)
-    io.to(roomCode).emit("returnToLobby", playersAndRoles)
+
+    // Build response with host status for each player and players list
+    const players = Object.keys(serverInfo[roomCode] || {})
+    const playersWithHostStatus = {}
+    players.forEach(player => {
+      playersWithHostStatus[player] = {
+        isHost: serverInfo[roomCode][player].host
+      }
+    })
+
+    io.to(roomCode).emit("returnToLobby", { playersAndRoles, playersWithHostStatus, players })
   });
 
   socket.on("requestGameState", state => {
