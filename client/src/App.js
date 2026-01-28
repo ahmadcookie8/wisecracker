@@ -21,6 +21,11 @@ function App() {
   const [serverConnected, setServerConnected] = useState(false)
 
   useEffect(() => {
+    console.log('App useEffect - Initial sessionStorage:', {
+      playerName: sessionStorage.getItem('playerName'),
+      roomCode: sessionStorage.getItem('roomCode')
+    });
+
     const socket = socketIOClient(ENDPOINT, {
       reconnection: true,
       reconnectionDelay: 1000,
@@ -31,11 +36,12 @@ function App() {
       console.log('Connected to server');
       setServerConnected(true);
 
-      // Try to restore session if we were previously logged in
+      // Try to restore session only if we're not on the main page
       const savedPlayerName = sessionStorage.getItem('playerName');
       const savedRoomCode = sessionStorage.getItem('roomCode');
+      console.log('On connect - sessionStorage:', { savedPlayerName, savedRoomCode, pathname: window.location.pathname });
 
-      if (savedPlayerName && savedRoomCode) {
+      if (savedPlayerName && savedRoomCode && window.location.pathname !== '/') {
         console.log('Attempting to reconnect player session...');
         socket.emit('reconnect_player', { playerName: savedPlayerName, roomCode: savedRoomCode });
       }
@@ -52,6 +58,25 @@ function App() {
 
     socket.on('reconnection_success', (data) => {
       console.log('Reconnection successful:', data);
+      // Restore loggedIn state
+      setState(prevState => ({ ...prevState, loggedIn: true }));
+      // Request current game state to sync up
+      const savedPlayerName = sessionStorage.getItem('playerName');
+      const savedRoomCode = sessionStorage.getItem('roomCode');
+      if (savedPlayerName && savedRoomCode) {
+        socket.emit('requestGameState', { playerName: savedPlayerName, roomCode: savedRoomCode });
+      }
+    });
+
+    socket.on('reconnection_failed', (data) => {
+      console.log('Reconnection failed:', data.reason);
+      // Clear invalid session data
+      sessionStorage.removeItem('playerName');
+      sessionStorage.removeItem('roomCode');
+      // Redirect to main page if not already there
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
     });
 
     setState(prevState => ({ ...prevState, socket: socket }));
@@ -113,16 +138,21 @@ function App() {
           {/* routes */}
           <Route exact path="/" render={() => <MainPage appState={state} setAppState={setAppState} />} />
           <Route path="/lobby" render={() => {
-            console.log(state);
-            // if (state.loggedIn) { return <LobbyPage appState={state} setAppState={setAppState} /> } else { return <MainPage appState={state} setAppState={setAppState} /> }
-
-            if (state.loggedIn) { return <LobbyPage appState={state} setAppState={setAppState} /> } else { return <Redirect to="/" /> }
-            // return <LobbyPage appState={state} />
+            // Check if user has valid session (either logged in or has sessionStorage data)
+            const savedPlayerName = sessionStorage.getItem('playerName');
+            const savedRoomCode = sessionStorage.getItem('roomCode');
+            const hasValidSession = state.loggedIn || (savedPlayerName && savedRoomCode);
+            console.log('Lobby route check:', { loggedIn: state.loggedIn, savedPlayerName, savedRoomCode, hasValidSession });
+            if (hasValidSession) { return <LobbyPage appState={state} setAppState={setAppState} /> } else { return <Redirect to="/" /> }
           }} />
 
           <Route path="/roundPlaying" render={() => {
-            console.log(state);
-            if (state.loggedIn) { return <RoundPlayingPage appState={state} setAppState={setAppState} /> } else { return <Redirect to="/" /> }
+            // Check if user has valid session (either logged in or has sessionStorage data)
+            const savedPlayerName = sessionStorage.getItem('playerName');
+            const savedRoomCode = sessionStorage.getItem('roomCode');
+            const hasValidSession = state.loggedIn || (savedPlayerName && savedRoomCode);
+            console.log('RoundPlaying route check:', { loggedIn: state.loggedIn, savedPlayerName, savedRoomCode, hasValidSession });
+            if (hasValidSession) { return <RoundPlayingPage appState={state} setAppState={setAppState} /> } else { return <Redirect to="/" /> }
           }} />
           {/* <Route path="/roundPlaying" render={() => <RoundPlayingPage appState={state} setAppState={setAppState} />} /> */}
 

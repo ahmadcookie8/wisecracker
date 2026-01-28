@@ -9,19 +9,123 @@ import '../../App.css';
 
 
 function RoundPlayingPage(props) {
-  const [state, setState] = useState(useLocation().state)//({ playerName: "", roomCode: "", players: [] })
+  const location = useLocation();
+
+  // Handle refresh: restore basic state from sessionStorage if useLocation().state is null
+  const initialState = location.state || {
+    playerName: sessionStorage.getItem('playerName') || '',
+    roomCode: sessionStorage.getItem('roomCode') || '',
+    players: [],
+    prompt: '',
+    chooser: '',
+    typers: [],
+    numAnswersExpected: 0,
+    answer: [],
+    playersAndAnswers: [],
+    numAnswersRevealed: -1,
+    winnerAndAnswer: {},
+    playerAndScores: {},
+    returnToLobby: false,
+    maxScore: '3'
+  };
+
+  const [state, setState] = useState(initialState);
   const socket = props.appState.socket
 
   useEffect(() => {
     if (!socket) return; // Guard against null socket
 
-    // CLEAN UP THE EFFECT
-    // return () => socket.disconnect();
+    // Request game state on mount to sync up (handles refresh and backgrounding)
+    const savedPlayerName = sessionStorage.getItem('playerName');
+    const savedRoomCode = sessionStorage.getItem('roomCode');
+    if (savedPlayerName && savedRoomCode) {
+      socket.emit('requestGameState', { playerName: savedPlayerName, roomCode: savedRoomCode });
+    }
+
+    // Handle page visibility changes (detect backgrounding/returning)
+    const handleVisibilityChange = () => {
+      if (!document.hidden && savedPlayerName && savedRoomCode) {
+        console.log('Page became visible, syncing game state...');
+        socket.emit('requestGameState', { playerName: savedPlayerName, roomCode: savedRoomCode });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Listen for game state updates from server
+    socket.on("gameStateReceived", (gameState) => {
+      console.log('Received game state:', gameState);
+
+      if (!gameState.inGame) {
+        // Player is not in an active game, redirect to lobby
+        setState(prevState => ({ ...prevState, returnToLobby: true }));
+        return;
+      }
+
+      // Determine what phase we're in and set numAnswersExpected accordingly
+      let numAnswersExpected = 0;
+      if (gameState.prompt) {
+        // Count underscores in prompt to determine expected answers
+        const underscoreCount = (gameState.prompt.match(/_/g) || []).length;
+        numAnswersExpected = underscoreCount || 1; // Default to 1 if no underscores
+      }
+
+      // Initialize answer array if we're a typer and haven't submitted yet
+      let answerArray = [];
+      if (gameState.role === 'typer' && gameState.typers && gameState.typers.includes(state.playerName)) {
+        // Still need to answer - initialize blank answer array
+        for (let i = 0; i < numAnswersExpected; i++) {
+          answerArray.push("");
+        }
+      }
+
+      // Determine numAnswersRevealed for the reveal phase
+      let numAnswersRevealed = state.numAnswersRevealed;
+      if (gameState.playersAndAnswers && Object.keys(gameState.playersAndAnswers).length > 0) {
+        // We're in the reveal/choosing phase
+        if (gameState.winnerAndAnswer && Object.keys(gameState.winnerAndAnswer).length > 0) {
+          // Winner already chosen - reveal all answers
+          numAnswersRevealed = Object.keys(gameState.playersAndAnswers).length - 1;
+        } else if (state.numAnswersRevealed < 0 && gameState.role !== 'chooser') {
+          // Non-chooser rejoining during reveal phase - show all answers so they can see what's happening
+          // (Chooser should be able to reveal answers one by one even if they rejoin)
+          numAnswersRevealed = Object.keys(gameState.playersAndAnswers).length - 1;
+        }
+      }
+
+      // Update state with server's current game state
+      // Use nullish coalescing to preserve falsy values like empty arrays/strings
+      // If chooser had a pending prompt (viewed but not confirmed), restore it
+      const promptToRestore = gameState.prompt || (gameState.role === 'chooser' ? gameState.pendingPrompt : null);
+
+      setState(prevState => ({
+        ...prevState,
+        startGame: gameState.role,
+        prompt: promptToRestore ?? prevState.prompt,
+        chooser: gameState.chooser ?? prevState.chooser,
+        typers: gameState.typers ?? prevState.typers,
+        playersAndAnswers: gameState.playersAndAnswers ?? prevState.playersAndAnswers,
+        winnerAndAnswer: gameState.winnerAndAnswer ?? prevState.winnerAndAnswer,
+        playerAndScores: gameState.playersAndScores ?? prevState.playerAndScores,
+        maxScore: gameState.maxScore ?? prevState.maxScore,
+        numAnswersExpected: numAnswersExpected > 0 ? numAnswersExpected : prevState.numAnswersExpected,
+        answer: answerArray.length > 0 ? answerArray : prevState.answer,
+        numAnswersRevealed
+      }));
+
+      console.log('State synced to phase:', {
+        hasPrompt: !!gameState.prompt,
+        typersRemaining: gameState.typers?.length || 0,
+        hasAnswers: !!gameState.playersAndAnswers,
+        hasWinner: !!gameState.winnerAndAnswer,
+        role: gameState.role
+      });
+    });
 
     socket.on("getNewPrompt", (prompt) => {
       const newPrompt = prompt
       console.log(newPrompt)
-      setState(prevState => ({ ...prevState, prompt: newPrompt, startGame: null, returnToLobby: false }))
+      // Don't reset startGame - it should persist throughout the round
+      setState(prevState => ({ ...prevState, prompt: newPrompt, returnToLobby: false }))
     });
 
     socket.on("getChooser", (chooser) => {
@@ -73,9 +177,14 @@ function RoundPlayingPage(props) {
     });
 
     socket.on("answerRevealed", (newNumAnswersRevealed) => {
-      if(state.playerName !== state.chooser){ //if we're a typer
-        setState(prevState => ({ ...prevState, numAnswersRevealed: newNumAnswersRevealed }))
-      } 
+      // Only update if we're not the chooser (typers only)
+      // Use prevState to avoid stale closure bug
+      setState(prevState => {
+        if (prevState.playerName !== prevState.chooser) {
+          return { ...prevState, numAnswersRevealed: newNumAnswersRevealed };
+        }
+        return prevState;
+      });
     });
 
     socket.on("roundWinnerGotten", (winnerAndAnswer) => {
@@ -115,7 +224,7 @@ function RoundPlayingPage(props) {
 
         // restartRoundPlaying(role)
 
-        socket.emit("getNewPrompt") //request prompt so we can get it after the redirect we triggered above
+        socket.emit("getNewPrompt", state.roomCode) //request prompt so we can get it after the redirect we triggered above
         socket.emit("getChooser", state.roomCode) //request chooser so we can get it after the redirect we triggered above
         socket.emit("getTypers", state.roomCode) //request typers so we can get it after the redirect we triggered above
       }
@@ -155,7 +264,7 @@ function RoundPlayingPage(props) {
           startGame: role
         }))
 
-        socket.emit("getNewPrompt") //request prompt so we can get it after the redirect we triggered above
+        socket.emit("getNewPrompt", state.roomCode) //request prompt so we can get it after the redirect we triggered above
         socket.emit("getChooser", state.roomCode) //request chooser so we can get it after the redirect we triggered above
         socket.emit("getTypers", state.roomCode) //request typers so we can get it after the redirect we triggered above
       }
@@ -194,8 +303,11 @@ function RoundPlayingPage(props) {
       console.log("Host " + oldHost + " left so everyone is returning to lobby with " + newHost + " as the new host.")
       window.alert("Host " + oldHost + " left so everyone is returning to lobby with " + newHost + " as the new host.")
     });
-    
-    
+
+    // CLEAN UP THE EFFECT
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
 
   }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -230,7 +342,7 @@ function RoundPlayingPage(props) {
           <div>
             <h6 style={{ color: "var(--text-colour-1)" }}>Prompt (Generate one or create one yourself):</h6>
             <textarea className="choosing-prompt" value={state.prompt} name="prompt" onChange={handleChange} />
-            <div><button className="button1" onClick={() => { socket.emit("getNewPrompt") }}>Get New Prompt</button></div>
+            <div><button className="button1" onClick={() => { socket.emit("getNewPrompt", state.roomCode) }}>Get New Prompt</button></div>
             <div><button className="button1" onClick={() => { socket.emit("setPrompt", state); socket.emit("getPrompt", state.roomCode) }}>Use This Prompt</button></div>
           </div>
         )
@@ -291,7 +403,11 @@ function RoundPlayingPage(props) {
       buttonText = "Reveal An Answer"
     }
 
-    if (state.typers.length === 0 && Object.keys(state.winnerAndAnswer).length === 0){ //everyone is done typing and no winner has been chosen for the round
+    // Only show the answer choosing UI when:
+    // 1. All typers have submitted (typers.length === 0)
+    // 2. No winner has been chosen yet
+    // 3. playersAndAnswers has been populated (length > 0)
+    if (state.typers.length === 0 && Object.keys(state.winnerAndAnswer).length === 0 && Object.keys(state.playersAndAnswers).length > 0){ //everyone is done typing and no winner has been chosen for the round
       console.log(state.playersAndAnswers)
       return (
         <div>
@@ -413,10 +529,10 @@ function RoundPlayingPage(props) {
         <h2 className="room-code title-colour-1">Room Code: {state.roomCode}</h2>
         {/* <h4>Role: {useLocation().role}</h4> */}
         <h4 className="text-colour-2" style={{ "margin-top": "-20px" }}> {state.playerName}</h4>
-        {displayPromptChoosing(useLocation().role)}
-        {displayAnswerWriting(useLocation().role)}
-        {displayAnswerChoosing(useLocation().role)}
-        {displayRoundResults(useLocation().role)}
+        {displayPromptChoosing(state.startGame)}
+        {displayAnswerWriting(state.startGame)}
+        {displayAnswerChoosing(state.startGame)}
+        {displayRoundResults(state.startGame)}
         {restartRoundPlaying()}
         {returnToLobby()}
         {console.log(state)}

@@ -23,6 +23,7 @@ let randomizedTypersAnswers = {}
 let roundWinnerOfRoom = {}
 let maxScoreOfRoom = {}
 let gameWinner = {}
+let pendingPrompts = {} // Stores the prompt chooser is viewing but hasn't confirmed yet
 
 //Constants to refer to index of playerData
 const ANSWERS = 0
@@ -83,7 +84,8 @@ const apiSetPlayerAnswer = (roomCode, playerName, answers) => {
 }
 
 const setRandomizedPlayerAnswers = (roomCode) => {
-  let listOfTypers = apiGetTypers(roomCode)
+  // Use getAllTypers to get all typers (not just those who haven't submitted)
+  let listOfTypers = getAllTypers(roomCode)
   let listOfAnswers = listOfTypers.map((player) => { if (allConnectedPlayers[roomCode][player][ROLE] === "typer") { return allConnectedPlayers[roomCode][player][ANSWERS] } })
   let listOfTypersAnswers = {}
 
@@ -126,6 +128,18 @@ const apiGetPrompt = (roomCode) => {
   return gamePrompts[roomCode]
 }
 
+const apiSetPendingPrompt = (roomCode, prompt) => {
+  pendingPrompts[roomCode] = prompt
+}
+
+const apiGetPendingPrompt = (roomCode) => {
+  return pendingPrompts[roomCode]
+}
+
+const apiClearPendingPrompt = (roomCode) => {
+  pendingPrompts[roomCode] = ""
+}
+
 const apiGetChooser = (roomCode) => {
   // let listOfRoomCodes = Object.keys(allConnectedPlayers)
 
@@ -143,13 +157,29 @@ const apiGetChooser = (roomCode) => {
   // return ""
 }
 
+// Returns all players with role "typer" (used for building answer lists)
+const getAllTypers = (roomCode) => {
+  const listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
+  const allTypers = []
+
+  for (let i = 0; i < listOfPlayers.length; i++) {
+    if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] === "typer") {
+      allTypers.push(listOfPlayers[i])
+    }
+  }
+  return allTypers
+}
+
+// Returns only typers who haven't submitted their answer yet (used for UI "still typing" display)
 const apiGetTypers = (roomCode) => {
   listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
   currentylChosen = apiGetChooser(roomCode)
   listOfTypers = []
 
   for (let i = 0; i < listOfPlayers.length; i++) {
-    if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] !== "chooser") {
+    // Only include typers who haven't submitted their answer yet
+    if (allConnectedPlayers[roomCode][listOfPlayers[i]][ROLE] === "typer" &&
+        allConnectedPlayers[roomCode][listOfPlayers[i]][ANSWERS].length === 0) {
       listOfTypers.push(listOfPlayers[i])
     }
 
@@ -331,6 +361,11 @@ const apiGetScores = (roomCode) => {
 const apiSetPrompt = (roomCode, prompt) => {
   prompt = cleanUpPrompt(prompt)
   gamePrompts[roomCode] = prompt
+  pendingPrompts[roomCode] = "" // Clear pending prompt once confirmed
+
+  // Clear previous round's data to prevent stale state on refresh
+  roundWinnerOfRoom[roomCode] = ""
+  randomizedTypersAnswers[roomCode] = {}
 
   underscoreCountOfRoom[roomCode] = 0
 
@@ -455,6 +490,7 @@ const apiCreateRoom = (playerCreating) => {
   allConnectedPlayers[roomCode] = {}
   allDisconnectedPlayers[roomCode] = {}
   gamePrompts[roomCode] = ""
+  pendingPrompts[roomCode] = ""
   chooserIndexOfRoom[roomCode] = 0
   underscoreCountOfRoom[roomCode] = 0
   randomizedTypersAnswers[roomCode] = {}
@@ -549,9 +585,17 @@ const apiReturnToLobby = (roomCode) => {
 const apiNextRound = (roomCode) => {
   listOfPlayers = Object.keys(allConnectedPlayers[roomCode])
 
+  // Clear all player answers
   listOfPlayers.map((element) => {
     allConnectedPlayers[roomCode][element][ANSWERS] = []
   })
+
+  // Clear all round-specific state so refresh doesn't show old data
+  gamePrompts[roomCode] = ""
+  pendingPrompts[roomCode] = ""
+  roundWinnerOfRoom[roomCode] = ""
+  randomizedTypersAnswers[roomCode] = {}
+  underscoreCountOfRoom[roomCode] = 0
 
   roleAssigner(roomCode)
   rollCycler(roomCode)
@@ -571,6 +615,9 @@ module.exports = {
   apiStartGame,
   apiSetPrompt,
   apiGetPrompt,
+  apiSetPendingPrompt,
+  apiGetPendingPrompt,
+  apiClearPendingPrompt,
   apiAssigningAnswerToPrompt,
   apiSetPlayerAnswer,
   apiGetRandomizedPlayerAnswers,
