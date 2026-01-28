@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import socketIOClient, { io } from "socket.io-client";
 import { Redirect } from 'react-router-dom';
 
 import '../../App.css';
@@ -14,8 +13,9 @@ import '../../App.css';
 
 function LobbyPage(props) {
   const [state, setState] = useState(useLocation().state)//({ playerName: "", roomCode: "", players: [] })
-  const [socket, setSocket] = useState(props.appState.socket)
+  const [socket] = useState(props.appState.socket)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     socket.on("message", data => {
       // setResponse(data);

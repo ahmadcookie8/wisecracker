@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import socketIOClient from "socket.io-client";
 
 
@@ -13,8 +13,7 @@ import LobbyPage from "./react-components/LobbyPage"
 import RoundPlayingPage from "./react-components/RoundPlayingPage"
 
 
-const ENDPOINT = "https://thawing-ocean-59152.herokuapp.com/" 
-// const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 
 
 function App() {

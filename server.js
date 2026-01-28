@@ -6,7 +6,12 @@ const socketIO = require('socket.io');
 
 const app = express();
 const server = http.Server(app);
-const io = socketIO(server);
+const io = socketIO(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -14,12 +19,11 @@ app.use(bodyParser.json({
   limit: '50mb'
 }));
 
-//to bypass cors errors
 const cors = require("cors")
+app.use(cors());
 
 app.set('port', 5000);
 app.use('/static', express.static(__dirname + '/static'));
-app.use(express.static(__dirname + '/client/build'));
 
 //WisecrackerBackend functions
 const { apiCreateRoom } = require("./static/WisecrackerBackend")
@@ -45,10 +49,14 @@ const { apiReturnToLobby } = require("./static/WisecrackerBackend")
 
 
 
-// Routing
-app.get("*", function (request, response) {
-  // response.sendFile(path.join(__dirname, 'index.html'));
-  response.sendFile(__dirname + '/client/build/index.html');
+// Health check endpoint
+app.get("/health", function (request, response) {
+  response.json({ status: "ok" });
+});
+
+// Root — confirms the API is alive
+app.get("/", function (request, response) {
+  response.json({ message: "WiseCracker API is running. Frontend is served separately." });
 });
 
 

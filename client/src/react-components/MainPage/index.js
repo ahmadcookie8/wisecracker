@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import socketIOClient from "socket.io-client";
-import { Link, Redirect } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 
 import '../../App.css';
 
@@ -13,10 +12,8 @@ import '../../App.css';
 
 
 function MainPage(props) {
-  const [response, setResponse] = useState("");
   const [state, setState] = useState({ playerName: "", roomCode: "", players: [], goToLobby: "", maxScore: "3" })
-  // console.log("ZZZZ", props.appState)
-  const [socket, setSocket] = useState(props.appState.socket)
+  const [socket] = useState(props.appState.socket)
 
   useEffect(() => {
     socket.on("message", data => {
@@ -72,7 +69,7 @@ function MainPage(props) {
     // CLEAN UP THE EFFECT
     // return () => socket.disconnect();
 
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // state = {
   //   gabagoo: false,

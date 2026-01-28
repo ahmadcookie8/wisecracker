@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Redirect } from 'react-router-dom';
-import socketIOClient from "socket.io-client";
 import { uid } from 'react-uid';
 
 import '../../App.css';
@@ -11,7 +10,7 @@ import '../../App.css';
 
 function RoundPlayingPage(props) {
   const [state, setState] = useState(useLocation().state)//({ playerName: "", roomCode: "", players: [] })
-  const [socket, setSocket] = useState(props.appState.socket)
+  const [socket] = useState(props.appState.socket)
 
   useEffect(() => {
 
@@ -198,7 +197,7 @@ function RoundPlayingPage(props) {
     
     
 
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 
@@ -275,6 +274,7 @@ function RoundPlayingPage(props) {
               if (state.typers.length === 1) { // if we're here then this is playerName and no other player is typing
                 return (<p className="typer-still-typing">You're the only one still answering, speed it up!</p>)
               }
+              return null
             })}
           </div>
         )
@@ -299,22 +299,19 @@ function RoundPlayingPage(props) {
           {/* <p name="prompt" className="prompt">{state.prompt}</p> */}
           {Object.keys(state.playersAndAnswers).map((playerName, index) => {
             if(index <= state.numAnswersRevealed){
-              // return (<p className="white-text">{state.playersAndAnswers[playerName].join(" // ")}</p>)
-              // return (<div><button className="button1 ">{state.playersAndAnswers[playerName].join(" // ")}</button></div>)
-              // return (<p className="white-text">{state.playersAndAnswers[playerName]}</p>)
-              // return (<div><button className="button2" disabled={role === "typer" || (role === "chooser" && state.numAnswersRevealed < Object.keys(state.playersAndAnswers).length - 1)}>{state.playersAndAnswers[playerName]}</button></div>) //can only click if chooser and all the answers have been revealed
               return (
               <div><button className="button2" onClick={() => {socket.emit("setRoundWinner", {"playerName": playerName, "roomCode": state.roomCode}); socket.emit("getScores", state.roomCode); socket.emit("getRoundWinner", state.roomCode);}}disabled={role === "typer" || (role === "chooser" && state.numAnswersRevealed < Object.keys(state.playersAndAnswers).length - 1)}>
-                {state.playersAndAnswers[playerName].map((answerSegment, index) => {
-                  if (index % 2 == 0){
+                {state.playersAndAnswers[playerName].map((answerSegment, i) => {
+                  if (i % 2 === 0){
                     return answerSegment
                   } else {
                     return <b>{answerSegment}</b>
                   }
                 })}
               </button></div>
-              ) //can only click if chooser and all the answers have been revealed
+              )
             }
+            return null
           })}
           {role === "chooser" && buttonText === "Reveal An Answer" ? //the && acts like a ternary ? : but without the : part
           <button className="button1" onClick={() => {
@@ -354,7 +351,7 @@ function RoundPlayingPage(props) {
           <p className="white-text">{roundWinner + " "}got a point with:</p>
           <div className="white-text" style={{color: "var(--text-colour-1"}}>
             {winningAnswer.map((answerSegment, index) => {
-              if (index % 2 == 0){
+              if (index % 2 === 0){
                 return answerSegment
               } else {
                 return <b>{answerSegment}</b>
