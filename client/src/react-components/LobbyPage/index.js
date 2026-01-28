@@ -12,11 +12,28 @@ import '../../App.css';
 
 
 function LobbyPage(props) {
-  const [state, setState] = useState(useLocation().state)//({ playerName: "", roomCode: "", players: [] })
+  const location = useLocation();
+
+  // Handle refresh: restore state from sessionStorage if useLocation().state is null
+  const initialState = location.state || {
+    playerName: sessionStorage.getItem('playerName') || '',
+    roomCode: sessionStorage.getItem('roomCode') || '',
+    players: [],
+    goToLobby: '',
+    maxScore: '3'
+  };
+
+  const [state, setState] = useState(initialState);
   const socket = props.appState.socket
 
   useEffect(() => {
     if (!socket) return; // Guard against null socket
+
+    // If we restored from sessionStorage, we need to rejoin the room
+    if (!location.state && state.roomCode && state.playerName) {
+      console.log('Restoring lobby session after refresh...');
+      // The socket will auto-reconnect via App.js reconnect_player event
+    }
 
     socket.on("message", data => {
       // setResponse(data);

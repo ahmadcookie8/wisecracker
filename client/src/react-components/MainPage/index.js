@@ -45,8 +45,7 @@ function MainPage(props) {
         setState(prevState => ({ ...prevState, roomCode: newRoomCode }))
         setState(prevState => ({ ...prevState, goToLobby: "host" })) //this triggers a redirect to the lobby page
 
-        // Save session for reconnection
-        sessionStorage.setItem('playerName', state.playerName);
+        // Update roomCode in sessionStorage (playerName was already saved in createRoom)
         sessionStorage.setItem('roomCode', newRoomCode);
       }
 
@@ -67,9 +66,7 @@ function MainPage(props) {
         setState(prevState => ({ ...prevState, players: newPlayers }))
         setState(prevState => ({ ...prevState, goToLobby: "nonHost" })) //this triggers a redirect to the lobby page
 
-        // Save session for reconnection
-        sessionStorage.setItem('playerName', state.playerName);
-        sessionStorage.setItem('roomCode', state.roomCode.toUpperCase());
+        // playerName and roomCode were already saved in joinRoom function
       }
 
     });
@@ -105,6 +102,11 @@ function MainPage(props) {
   function createRoom() {
     console.log("Room Created as " + state.playerName + "!")
     setState(prevState => ({ ...prevState, players: [state.playerName] }))
+
+    // Save playerName now while we know it's correct
+    console.log('SAVING playerName to sessionStorage:', state.playerName);
+    sessionStorage.setItem('playerName', state.playerName);
+
     socket.emit("createRoom", state)
     // console.log(testCall())
     // console.log(response)
@@ -124,6 +126,12 @@ function MainPage(props) {
 
   function joinRoom() {
     console.log("Joined Room " + state.roomCode + "!")
+
+    // Save playerName and roomCode now while we know they're correct
+    console.log('SAVING to sessionStorage:', { playerName: state.playerName, roomCode: state.roomCode });
+    sessionStorage.setItem('playerName', state.playerName);
+    sessionStorage.setItem('roomCode', state.roomCode.toUpperCase());
+
     socket.emit("joinRoom", state)
 
     // let players = apiJoinRoom(state.playerName, state.roomCode)

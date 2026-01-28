@@ -45,6 +45,9 @@ const { apiNextRound } = require("./static/WisecrackerBackend")
 const { apiGetMaxScore } = require("./static/WisecrackerBackend")
 const { apiSetMaxScore } = require("./static/WisecrackerBackend")
 const { apiReturnToLobby } = require("./static/WisecrackerBackend")
+const { apiGetPlayersAndRoles } = require("./static/WisecrackerBackend")
+const { apiSetPendingPrompt } = require("./static/WisecrackerBackend")
+const { apiGetPendingPrompt } = require("./static/WisecrackerBackend")
 
 
 
@@ -64,8 +67,11 @@ app.get("/", function (request, response) {
 
 // Starts the server.
 const port = process.env.PORT || 5000
-server.listen(port, function () {
+server.listen(port, '0.0.0.0', function () {
   console.log('Starting server on port 5000');
+  console.log('Server is accessible at:');
+  console.log('  - http://localhost:5000 (this computer)');
+  console.log('  - http://192.168.68.77:5000 (other devices on WiFi)');
 });
 
 const serverInfo = {}
@@ -175,9 +181,14 @@ io.on('connection', function (socket) {
   })
 
 
-  socket.on("getNewPrompt", function () {
-    console.log("getNewPrompt")
+  socket.on("getNewPrompt", function (roomCode) {
+    console.log("getNewPrompt for room:", roomCode)
     const prompt = apiGetRandomPrompt()
+
+    // Store pending prompt so it can be restored if chooser disconnects
+    if (roomCode) {
+      apiSetPendingPrompt(roomCode, prompt)
+    }
 
     socket.emit("getNewPrompt", prompt) //give player the prompt they requested
 
@@ -269,10 +280,79 @@ io.on('connection', function (socket) {
     io.to(roomCode).emit("returnToLobby", playersAndRoles)
   });
 
+  socket.on("requestGameState", state => {
+    const { playerName, roomCode } = state;
+    console.log(`Player ${playerName} requesting game state for room ${roomCode}`);
+
+    try {
+      // Get current game state from backend
+      const playersAndRoles = apiGetPlayersAndRoles(roomCode) || {};
+      const inGame = playersAndRoles[playerName] !== undefined && playersAndRoles[playerName] !== "";
+
+      // Only get game-specific data if player is in an active game
+      let prompt, pendingPrompt, chooser, typers, playersAndAnswers, winnerAndAnswer, playersAndScores, maxScore;
+
+      if (inGame) {
+        prompt = apiGetPrompt(roomCode);
+        pendingPrompt = apiGetPendingPrompt(roomCode);
+        chooser = apiGetChooser(roomCode);
+        typers = apiGetTypers(roomCode);
+        playersAndAnswers = apiGetRandomizedPlayerAnswers(roomCode);
+
+        // These might fail if no round has started yet, so wrap in try-catch
+        try {
+          winnerAndAnswer = apiGetRoundWinner(roomCode);
+        } catch (e) {
+          winnerAndAnswer = {};
+        }
+
+        try {
+          playersAndScores = apiGetScores(roomCode);
+        } catch (e) {
+          playersAndScores = {};
+        }
+
+        maxScore = apiGetMaxScore(roomCode);
+      }
+
+      const gameState = {
+        role: playersAndRoles[playerName],
+        prompt,
+        pendingPrompt,
+        chooser,
+        typers,
+        playersAndAnswers,
+        winnerAndAnswer,
+        playersAndScores,
+        maxScore,
+        inGame
+      };
+
+      socket.emit("gameStateReceived", gameState);
+    } catch (error) {
+      console.error(`Error getting game state for ${playerName} in ${roomCode}:`, error);
+      // Send empty game state to prevent client from hanging
+      socket.emit("gameStateReceived", { inGame: false });
+    }
+  });
 
   socket.on("reconnect_player", function (state) {
     const { playerName, roomCode } = state;
     console.log(`Player ${playerName} attempting to reconnect to room ${roomCode}`);
+
+    // Check if room exists in serverInfo
+    if (!serverInfo[roomCode]) {
+      console.log(`Reconnection failed: room ${roomCode} does not exist`);
+      socket.emit("reconnection_failed", { reason: "Room no longer exists" });
+      return;
+    }
+
+    // Check if player exists in the room
+    if (!serverInfo[roomCode][playerName]) {
+      console.log(`Reconnection failed: player ${playerName} not in room ${roomCode}`);
+      socket.emit("reconnection_failed", { reason: "Player not found in room" });
+      return;
+    }
 
     // Check if there's a pending disconnection for this player
     const timerKey = `${roomCode}-${playerName}`;
@@ -282,11 +362,12 @@ io.on('connection', function (socket) {
       console.log(`Reconnection successful for ${playerName} in ${roomCode}`);
 
       // Update socket ID and rejoin room
-      if (serverInfo[roomCode] && serverInfo[roomCode][playerName]) {
-        serverInfo[roomCode][playerName].socketId = socket.id;
-        socket.join(roomCode);
-        socket.emit("reconnection_success", { playerName, roomCode });
-      }
+      serverInfo[roomCode][playerName].socketId = socket.id;
+      socket.join(roomCode);
+      socket.emit("reconnection_success", { playerName, roomCode });
+    } else {
+      console.log(`Reconnection failed: no pending disconnection for ${playerName} in ${roomCode}`);
+      socket.emit("reconnection_failed", { reason: "Session expired" });
     }
   });
 
