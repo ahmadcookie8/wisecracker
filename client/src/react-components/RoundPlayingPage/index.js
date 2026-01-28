@@ -240,19 +240,27 @@ function RoundPlayingPage(props) {
       console.log("maxScore", maxScore)
     });
 
-    socket.on("returnToLobby", (playersAndRoles) => {
-      console.log("playersAndRoles", playersAndRoles)
+    socket.on("returnToLobby", (data) => {
+      console.log("returnToLobby data", data)
 
-      if (typeof playersAndRoles === "string") { //error
-        const errorMessage = playersAndRoles
+      if (typeof data === "string") { //error
+        const errorMessage = data
         console.log(errorMessage)
       } else {
-        const role = playersAndRoles[state.playerName]
-          
-        setState(prevState => ({ ...prevState, "returnToLobby": true }))
-        console.log("returnToLobby", state.returnToLobby)
+        const { playersWithHostStatus, players } = data
 
-        setState(prevState => ({ ...prevState, prompt: "",
+        // Determine if this player is the host
+        const isHost = playersWithHostStatus[state.playerName]?.isHost
+        const goToLobbyValue = isHost ? "host" : "nonHost"
+
+        console.log("returnToLobby - isHost:", isHost, "goToLobby:", goToLobbyValue)
+
+        setState(prevState => ({
+          ...prevState,
+          returnToLobby: true,
+          goToLobby: goToLobbyValue,
+          players: players,
+          prompt: "",
           chooser: "",
           typers: [],
           answer: [],
@@ -260,13 +268,9 @@ function RoundPlayingPage(props) {
           numAnswersRevealed: -1,
           winnerAndAnswer: {},
           playerAndScores: {},
-          numAnswersExpected: 0, //last b/c this triggers the prompt choosing
-          startGame: role
+          numAnswersExpected: 0,
+          startGame: ""
         }))
-
-        socket.emit("getNewPrompt", state.roomCode) //request prompt so we can get it after the redirect we triggered above
-        socket.emit("getChooser", state.roomCode) //request chooser so we can get it after the redirect we triggered above
-        socket.emit("getTypers", state.roomCode) //request typers so we can get it after the redirect we triggered above
       }
     });
 
