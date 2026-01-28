@@ -10,10 +10,10 @@ import '../../App.css';
 
 function RoundPlayingPage(props) {
   const [state, setState] = useState(useLocation().state)//({ playerName: "", roomCode: "", players: [] })
-  const [socket] = useState(props.appState.socket)
+  const socket = props.appState.socket
 
   useEffect(() => {
-
+    if (!socket) return; // Guard against null socket
 
     // CLEAN UP THE EFFECT
     // return () => socket.disconnect();
@@ -197,7 +197,7 @@ function RoundPlayingPage(props) {
     
     
 
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 
